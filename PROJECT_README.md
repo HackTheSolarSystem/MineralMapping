@@ -5,6 +5,7 @@
 ### Created by Ahnighito
 * Peter Kang
 * Cecina Babich Morrow
+* Katy Abbott
 
 ### Solution Description
 
