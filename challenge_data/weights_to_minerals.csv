@@ -1,4 +1,4 @@
-mineral,Mg,Ni,Al,Fe,Ca,Cr,P,S,Ti,Si
+﻿mineral,Mg,Ni,Al,Fe,Ca,Cr,P,S,Ti,Si
 CaTiO3std15,,,,,29.481,,,,35.211,
 Fe-num2std9,,,,100,,,,,,
 FeSstd2,,,,63.5252,,,,36.4748,,
@@ -6,4 +6,4 @@ Fe3O4std15,,,,72.3591,,,,,,
 Nistd9,,100,,,,,,,,
 NiSstd2,,64.6699,,,,,,35.3301,,
 rutile,,,,,,,,,59.9343,
-SCOlvstd6,,,,,,,,53.3749,,
+SCOlvstd6,29.8,0.29,,7.42,0.02,,,,,19.08
