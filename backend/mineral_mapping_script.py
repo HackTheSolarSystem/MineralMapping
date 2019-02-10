@@ -5,21 +5,15 @@ import sklearn
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
+import periodictable
 im = Image.open('challenge_data/dataset_1_opaques/obj1_8bt_Ca.tif')
 data = np.asarray(im)
 
 data = Image.open('challenge_data/dataset_1_opaques/standards_8bt_Ti.tif')
 data1 = Image.open('challenge_data/dataset_1_opaques/standards_8bt_Ti.tif')
 
-Image.open('challenge_data/dataset_1_opaques/standards_8bt_Ca.tif')
-Image.open('challenge_data/dataset_1_opaques/standards_8bt_Fe.tif')
-
-
-## imagine we have a dataframe of standards 
-## Mineral | Percent weight | Mean intensity | Standard deviation
-
-#for element in element maps:
-
+name = 'obj2_32bt_Si.tif'
+name.split('_')[2].split('.')[0]
 
 
 weights = pd.read_csv('challenge_data/weights_to_minerals.csv')
@@ -44,17 +38,13 @@ for element in elements:
         fig = plt.figure()
         intensities.hist()
         plt.ylim(0,1300)
-        plt.title(element + " " + mine)
+        plt.title(element + " " + mine + "std = " + str(intensities.std()))
         xis = np.append(xis, np.array(intensities))
-        yis = np.append(yis, np.repeat(weight, len(intensities)))
-
+        yis = np.append(yis, np.repeat(weight, len(intensities)))    
     xis, yis = xis.reshape(-1,1), yis.reshape(-1,1)
     reg = lr.fit(xis,yis)
-    pred = reg.predict(xi_pred)
-    reg.coef_
+    #pred = reg.predict(xi_pred)
     coefs[element] = float(reg.coef_)
-
-coefs
 
 
 pred = reg.predict(xi_pred)
@@ -65,6 +55,26 @@ plt.plot(xi_pred, pred, '*')
 plt.ylim(0, 100)
 plt.xlim(0, 400)
 
+percent_weight_pred = mineral_standards.copy()
+coefs
+ms = mineral_standards.iloc[:, :-1]
+ms.shape
+ms.shape
+coefs.shape
+ms.mul(coefs.values, axis = 1)
 
+ms.apply(lambda x: print(x))
+ms = ms[1:10]
+coefs.values
+
+ms.apply(lambda x: x*coefs.values[0], axis = 1)
+
+
+
+
+
+ms.apply(lambda x: x*coefs.values, axis = 1)
+for col in mineral_standards.columns[:-1]:
+    percent_weight_pred[col] = mineral_standards[col].apply(lambda x: x*coefs[col])
 
 
