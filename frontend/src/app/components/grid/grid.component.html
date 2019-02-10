@@ -1,9 +1,39 @@
-<embed class='mineral-image' src="../../../assets/obj1_8bt_Ti.tif">
-<div class="grid-container">
-  <div *ngFor="let subArray of testArray" class="grid-row">
-    <div *ngFor="let value of subArray"
-          class="grid-value"
-          [ngStyle]="{'background-color': value | getColor }">{{value}}
+<!--<embed id="atest" class='mineral-image' src="../../../assets/obj1_8bt_Ti.tif">-->
+<!--<div class="grid-container">-->
+  <!--&lt;!&ndash;<div *ngFor="let subArray of testArray" class="grid-row">&ndash;&gt;-->
+    <!--&lt;!&ndash;<div *ngFor="let value of subArray"&ndash;&gt;-->
+          <!--&lt;!&ndash;class="grid-value"&ndash;&gt;-->
+          <!--&lt;!&ndash;[ngStyle]="{'background-color': value | getColor }">{{value}}&ndash;&gt;-->
+    <!--&lt;!&ndash;</div>&ndash;&gt;-->
+  <!--&lt;!&ndash;</div>&ndash;&gt;-->
+<!--</div>-->
+
+<!--<div id="myresult" class="img-zoom-result"></div>-->
+
+<div class="img-zoom-container" (mouseenter)="imageZoom('myimageContainer', 'mygridContainer', 'myresult')">
+  <img id="myimageContainer" class='mineral-image' src="../../../assets/obj1_8bt_Ti.tif">
+  <div id="mygridContainer" class="grid-container">
+    <div *ngFor="let subArray of testArray" class="grid-row">
+      <div *ngFor="let value of subArray" class="grid-value" [ngStyle]="{'background-color': value | getColor }">
+        {{value}}
+      </div>
     </div>
   </div>
 </div>
+
+<div class="result-container">
+  <div id="myresult" class="img-zoom-result"></div>
+  <div class="grid-container resultgridContainer">
+    <div *ngFor="let subArray of testArray" class="grid-row">
+      <div *ngFor="let value of subArray" class="grid-value" [ngStyle]="{'background-color': value | getColor }">
+        {{value}}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--<div class="img-zoom-container" (mouseenter)="imageZoom('myimage', 'myresult');">-->
+  <!--<img id="myimage" src="../../../assets/beagle-puppy-in-large-cushion-chair.jpg"-->
+       <!--width="300" height="240">-->
+  <!--<div id="myresult" class="img-zoom-result"></div>-->
+<!--</div>-->
