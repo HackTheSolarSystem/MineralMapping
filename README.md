@@ -73,7 +73,7 @@ challenge of this approach was correlating each cluster with mineral. We have st
   - scikit-learn
   - scikit-image
 3. Much of the code is in the form of Jupyter notebook files, which can be accessed by running the `jupyter notebook` command and
-opening the .ipynb file in the browser window that opens. The code for the clustering approach can be found in `mineral_mapping_script.py` and `dbscan_clustering.py`.
+opening the .ipynb file in the browser window that opens. The code for the clustering approach can be found in `mineral_mapping_script.py` and `dbscan_clustering.py`, and the code for the subsequent stoichiometry calculations to derive mineral names from clusters can be found in `stoichiometry_from_centroids.py`
 
 ### Frontend Overview
 
