@@ -2,10 +2,14 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
+import { DetailViewComponent } from './views/detail-view/detail-view.component';
+import { SummaryViewComponent } from './views/summary-view/summary-view.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    DetailViewComponent,
+    SummaryViewComponent,
   ],
   imports: [
     BrowserModule
