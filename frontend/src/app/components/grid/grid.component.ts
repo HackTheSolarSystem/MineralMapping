@@ -1,5 +1,6 @@
-import {Component, HostListener, OnInit} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {container} from '@angular/core/src/render3/instructions';
+import * as d3 from 'd3';
 
 @Component({
   selector: 'overlay-grid',
@@ -7,6 +8,8 @@ import {container} from '@angular/core/src/render3/instructions';
   styleUrls: ['./grid.component.scss'],
 })
 export class GridComponent {
+  @ViewChild('container') container: ElementRef;
+  @ViewChild('source') image: ElementRef;
   public testArray = [
     [1, 2, 3, 4, 6, 6, 7, 8, 9, 5, 5],
     [1, 2, 3, 4, 6, 6, 7, 8, 9, 5, 5],
@@ -15,17 +18,41 @@ export class GridComponent {
     [1, 2, 5, 5, 5, 6, 7, 8, 9, 4, 4],
   ];
 
-  public resultTestArray = [];
+  ngOnInit() {
+    const canvas = d3.select("#img-zoom-container").append('svg').attr('width', '514px').attr('height', '514px');
 
-  // @HostListener('mousemove', ['$event.target'])
-  // onmousemove(event) {
-  //   console.log('move', event);
-  //   this.imageZoom('a', 'myresult')
-  // }
 
-  // ngOnInit() {
-  //   this.imageZoom('atest', 'myresult')
-  // }
+    const width = 514;
+    const height = 514;
+    const arrayWidth = this.testArray[0].length;
+    const arrayLength = this.testArray.length;
+    const widthMultipler = width / arrayWidth;
+    const heightMultipler = height / arrayLength;
+
+    let widthCount = 0;
+    let heightCount = 0;
+    //
+    //
+    for (let subArray of this.testArray) {
+      for (let value of subArray) {
+
+        // console.log('moo', widthCount, heightCount, , widthMultipler)
+        canvas.append('rect')
+          .attr('x', widthCount)
+          .attr('y', heightCount)
+          .attr('width', widthMultipler)
+          .attr('height', heightMultipler)
+          .style('fill','red');
+        widthCount = widthCount + widthMultipler;
+
+        if (widthCount > width) {
+          widthCount = 0;
+        }
+      }
+      heightCount = heightCount + heightMultipler;
+    }
+
+  }
 
   imageZoom(imgID, gridContainerId, resultID) {
     function moveLens(e) {
