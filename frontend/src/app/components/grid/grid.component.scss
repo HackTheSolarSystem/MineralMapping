@@ -1,0 +1,21 @@
+.mineral-image {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+.grid-container {
+  display: flex;
+  flex-direction: column;
+
+  .grid-row {
+    display: flex;
+    flex: 1;
+
+    .grid-value {
+      width: 1px;
+      height: 1px;
+      flex-direction: row;
+      opacity: 0.75;
+    }
+  }
+}
