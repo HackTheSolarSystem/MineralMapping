@@ -9,24 +9,6 @@ from sklearn.linear_model import LinearRegression
 from pathlib import Path
 from skimage.io import imread, imshow
 
-# open example image
-im = Image.open('challenge_data/dataset_1_opaques/obj2_8bt_Ca.tif')
-im.show()
-data = np.asarray(im)
-
-data = Image.open('challenge_data/dataset_1_opaques/standards_8bt_Ti.tif')
-data1 = Image.open('challenge_data/dataset_1_opaques/standards_8bt_Ti.tif')
-
-Image.open('challenge_data/dataset_1_opaques/standards_8bt_Ca.tif')
-Image.open('challenge_data/dataset_1_opaques/standards_8bt_Fe.tif')
-
-
-## imagine we have a dataframe of standards
-## Mineral | Percent weight | Mean intensity | Standard deviation
-
-#for element in element maps:
-
-
 # read in percent weights by element of the minerals in the standard
 weights = pd.read_csv('challenge_data/weights_to_minerals.csv')
 weights.head()
@@ -34,26 +16,34 @@ weights.head()
 mineral_standards = pd.read_csv('challenge_data/mineral_standards.csv')
 mineral_standards.head()
 # create dictionary to standardize file names to chemical formulas
+# needed to separate each element in the formula with an _ to make looping easier
 mineral_dict = dict(zip(np.unique(mineral_standards['mineral']),
     ["Ca_Ti_O_3", "Fe_", "Fe_3O_4", "Fe_S_", "Ni_S_", "Ni_", "Ca_Fe_Mg_Mn_Ni_Si_", "Ti_O_2"]))
-# use dictionary to change mineral column
+# use dictionary to change mineral columns to underscore format
 weights['mineral'] = weights['mineral'].map(mineral_dict)
 mineral_standards['mineral'] = mineral_standards['mineral'].map(mineral_dict)
+# list of elements
+# need to ignore the "mineral" column of the data
 elements = [val for val in mineral_standards.columns if val != 'mineral']
 coefs = pd.DataFrame(index = ['coeff'], columns = elements)
+# make a linear regression forcing the intercept to be zero
+# since zero intensity should correspond to zero percent weight
 lr = LinearRegression(fit_intercept = False)
 # loop through elements to create linear regression of percent weight vs pixel intensity
 # in the minerals in the standard
 for element in elements:
     element_df = mineral_standards[mineral_standards['mineral'].str.contains(element + "_")]
+    # if the element has no percent weights, skip it
     if element_df.empty:
         continue
     minerals = element_df['mineral'].unique()
     xis = np.empty(0)
     yis = np.empty(0)
     for mine in minerals:
+        # get percent weights of the element in that mineral
         weight = weights[weights['mineral'] == mine][element]
         intensities = element_df[element_df['mineral'] == mine][element]
+        # create histogram of element intensities in each mineral
         fig = plt.figure()
         intensities.hist()
         plt.ylim(0,1300)
@@ -62,39 +52,37 @@ for element in elements:
         yis = np.append(yis, np.repeat(weight, len(intensities)))
 
     xis, yis = xis.reshape(-1,1), yis.reshape(-1,1)
+    # fit linear regression on percent weight vs intensity
     reg = lr.fit(xis,yis)
-    #pred = reg.predict(xi_pred)
+    xi_pred =  np.arange(0,900).reshape(-1,1)
+    # create predictions for range of intensity values
+    pred = reg.predict(xi_pred)
+    # plot regression lines over range of intensities for elements
+    fig = plt.figure()
+    plt.plot(xis,yis, 'o', alpha = .01)
+    plt.plot(xi_pred, pred, '*')
+    plt.title(element)
+    plt.ylim(0, max(yis) + 20)
+    plt.xlim(0, max(xis))
+    plt.savefig("./images/" + element + "weight_intensity_regression")
     reg.coef_
+    # get the linear regression coefficient for each element
     coefs[element] = float(reg.coef_)
 
 coefs
 
-
-pred = reg.predict(xi_pred)
-xi_pred =  np.arange(0,400).reshape(-1,1)
-fig = plt.figure()
-plt.plot(xis,yis, 'o', alpha = .01)
-plt.plot(xi_pred, pred, '*')
-plt.ylim(0, 100)
-plt.xlim(0, 400)
-
-mineral_standards.columns[:-1]
-mineral_standards.shape
+# create empty data frame to fill with predicted percent weights
 percent_weight_pred = pd.DataFrame(columns = mineral_standards.columns)
-percent_weight_pred
-
-mineral_standards.columns
+# reorder coefficients to match order of columns in mineral_standards
 coefs = coefs[mineral_standards.columns[:-1]]
-coefs
-
 
 # apply coefficients from linear regression to pixel intensities from standard
 percent_weight_pred = mineral_standards.drop(['mineral'], axis = 1).apply(lambda x: x*coefs.values[0], axis = 1)
 
-percent_weight_pred
+# if the predicted percent weight is over 100, set it to 100
 percent_weight_pred[percent_weight_pred > 100] = 100
+# add a mineral column
 percent_weight_pred['mineral'] = mineral_standards['mineral']
-percent_weight_pred.head()
 percent_weight_pred.to_csv("predicted_percentweight_standard.csv")
 
 
@@ -104,98 +92,60 @@ image_path = root / "dataset_1_opaques"
 list(image_path.glob('*'))
 
 # calculate percent weights for object 1
-
+# list of the 32bt files in object 1
 obj1_minerals = [i for i in list(image_path.glob('obj1_32bt*.tif'))]
 obj1_minerals
+# create a dictionary with each element and the pixel intensities for that element in object 1
 meteorite_element = [{'name': s.name.split('_')[2].split('.')[0], 'image':imread(s)} for s in image_path.glob('obj1_32bt*.tif')]
 meteorite_element
 
+# read in the mask for object 1
 mask = imread(root / "dataset_1_opaques/obj1_mask.tif")
-mask[:-3,:].shape
+# the mask for object 1 is 3 pixels larger than the object 1 image, so we trim it
 mask = mask[:-3,:]
+# initialize pixels
 pixels = []
+# add intensities for each element for pixels not masked out
 for element in meteorite_element:
     pixels.append(element['image'][mask > 0])
 
-
+# combine pixels into a dataframe
 obj1_intensities = pd.DataFrame(np.dstack(pixels)[0], columns=[i['name'] for i in meteorite_element])
+# set column names into correct format
+# S and P used to be called Sul and Pho
 obj1_intensities.columns = ['Ca', 'Ti', 'Al', 'Cr', 'S', 'Si', 'P', 'Fe', 'Ni', 'Mg']
 obj1_intensities.head()
 
-"""
-obj1_intensities = pd.DataFrame(columns = [val['name'] for val in meteorite_element])
-for m in meteorite_element:
-    element = m['name']
-    obj1_intensities[element] = list(np.ravel(m['image']))
-"""
-
-
-
+# create a predicted percent weight dataframe of the same size as the intensity dataframe
 obj1_percent_weight_pred = obj1_intensities.copy()
-obj1_percent_weight_pred.head()
-
-coefs
+# reorder coefficients in the order of the column names
 coefs = coefs[obj1_intensities.columns]
-
-
-obj1_intensities.shape
-coefs.shape
-#obj1_intensities.mul(coefs.values, axis = 1)
-#new = obj1_intensities.mul(coefs.values, axis = 1)
-#obj1_percent_weight_pred
 
 # apply coefficients from linear regression to pixel intensities from object 1
 obj1_percent_weight_pred = obj1_intensities.apply(lambda x: x*coefs.values[0], axis = 1)
-
-obj1_percent_weight_pred.head()
 # replace all cells with greater than 100 predicted weight with 100
 obj1_percent_weight_pred[obj1_percent_weight_pred > 100] = 100
-
-
 obj1_percent_weight_pred.to_csv("./challenge_data/predicted_percentweight_obj1.csv")
 
 # calculate percent weight for object 2
-
 obj2_minerals = [i for i in list(image_path.glob('obj2_32bt*.tif'))]
-obj2_minerals
 meteorite_element = [{'name': s.name.split('_')[2].split('.')[0], 'image':imread(s)} for s in image_path.glob('obj2_32bt*.tif')]
-meteorite_element
 
+# read in mask for object 2
 mask = imread(root / "dataset_1_opaques/obj2_mask.tif")
 pixels = []
 for element in meteorite_element:
     pixels.append(element['image'][mask > 0])
-
-pixels
-
 obj2_intensities = pd.DataFrame(np.dstack(pixels)[0], columns=[i['name'] for i in meteorite_element])
-obj2_intensities.head()
 
-"""
-obj2_intensities = pd.DataFrame(columns = [val['name'] for val in meteorite_element])
-for m in meteorite_element:
-    element = m['name']
-    obj2_intensities[element] = list(np.ravel(m['image']))
-"""
-
-
-
+# create data frame for predicted percent weights
 obj2_percent_weight_pred = obj2_intensities.copy()
-obj2_percent_weight_pred.head()
-
+# reorder coefficients
 coefs = coefs[obj2_intensities.columns]
-coefs
-
-obj2_intensities.shape
-coefs.shape
-#obj2_intensities.mul(coefs.values, axis = 1)
-#new = obj2_intensities.mul(coefs.values, axis = 1)
-#obj2_percent_weight_pred
 
 # apply coefficients from linear regression to pixel intensities from object 2
 obj2_percent_weight_pred = obj2_intensities.apply(lambda x: x*coefs.values[0], axis = 1)
 
-obj2_percent_weight_pred.head()
 # replace all cells with greater than 100 predicted weight with 100
 obj2_percent_weight_pred[obj2_percent_weight_pred > 100] = 100
 
