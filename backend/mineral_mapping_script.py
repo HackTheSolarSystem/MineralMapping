@@ -103,6 +103,59 @@ root = Path("/Users/hellenfellows/OneDrive - AMNH/BridgeUp/HackathonRepo/Mineral
 image_path = root / "dataset_1_opaques"
 list(image_path.glob('*'))
 
+# calculate percent weights for object 1
+
+obj1_minerals = [i for i in list(image_path.glob('obj1_32bt*.tif'))]
+obj1_minerals
+meteorite_element = [{'name': s.name.split('_')[2].split('.')[0], 'image':imread(s)} for s in image_path.glob('obj1_32bt*.tif')]
+meteorite_element
+
+mask = imread(root / "dataset_1_opaques/obj1_mask.tif")
+mask[:-3,:].shape
+mask = mask[:-3,:]
+pixels = []
+for element in meteorite_element:
+    pixels.append(element['image'][mask > 0])
+
+
+obj1_intensities = pd.DataFrame(np.dstack(pixels)[0], columns=[i['name'] for i in meteorite_element])
+obj1_intensities.columns = ['Ca', 'Ti', 'Al', 'Cr', 'S', 'Si', 'P', 'Fe', 'Ni', 'Mg']
+obj1_intensities.head()
+
+"""
+obj1_intensities = pd.DataFrame(columns = [val['name'] for val in meteorite_element])
+for m in meteorite_element:
+    element = m['name']
+    obj1_intensities[element] = list(np.ravel(m['image']))
+"""
+
+
+
+obj1_percent_weight_pred = obj1_intensities.copy()
+obj1_percent_weight_pred.head()
+
+coefs
+coefs = coefs[obj1_intensities.columns]
+
+
+obj1_intensities.shape
+coefs.shape
+#obj1_intensities.mul(coefs.values, axis = 1)
+#new = obj1_intensities.mul(coefs.values, axis = 1)
+#obj1_percent_weight_pred
+
+# apply coefficients from linear regression to pixel intensities from object 1
+obj1_percent_weight_pred = obj1_intensities.apply(lambda x: x*coefs.values[0], axis = 1)
+
+obj1_percent_weight_pred.head()
+# replace all cells with greater than 100 predicted weight with 100
+obj1_percent_weight_pred[obj1_percent_weight_pred > 100] = 100
+
+
+obj1_percent_weight_pred.to_csv("./challenge_data/predicted_percentweight_obj1.csv")
+
+# calculate percent weight for object 2
+
 obj2_minerals = [i for i in list(image_path.glob('obj2_32bt*.tif'))]
 obj2_minerals
 meteorite_element = [{'name': s.name.split('_')[2].split('.')[0], 'image':imread(s)} for s in image_path.glob('obj2_32bt*.tif')]
