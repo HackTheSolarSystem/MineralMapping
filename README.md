@@ -6,6 +6,10 @@
 * Peter Kang
 * Cecina Babich Morrow
 * Katy Abbott
+* Jeremy Neiman
+* Meret Götschel
+* Jackson Lee
+* John Underwood
 
 ### Solution Description
 
