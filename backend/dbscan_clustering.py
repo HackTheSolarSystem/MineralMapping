@@ -35,29 +35,48 @@ principalDf= pd.DataFrame(data = principleComponents, columns = ['name1', 'name2
 finalDf = pd.concat([principalDf, pd.Series(labels)], axis = 1)
 final_minerals = pd.concat([principalDf, standards['mineral']], axis = 1)
 
-fig = plt.figure(figsize = (8,8))
-ax1 = fig.add_subplot(1,1,1)
-ax1.set_xlabel('Principal Component 1', fontsize = 15)
-ax1.set_ylabel('Principal Component 2', fontsize = 15)
-ax1.set_title('2 component PCA', fontsize = 20)
-ax1.scatter(finalDf['name1'], finalDf['name2'], c = labels)
-plt.savefig('pca_predicteddata.png')
-fig = plt.figure(figsize = (8,8))
-ax = fig.add_subplot(1,1,1)
-ax.scatter(finalDf['name1'], finalDf['name2'], c = standards['mineral'].map(color_dict).values)
-plt.savefig('pca_realdata.png')
-
-
-
 mn = list(set(standards['mineral'].values))
 color_dict = {}
 for i, val in enumerate(mn):
     color_dict[val] = i
 standards['mineral'].map(color_dict)
 
-ax.scatter(finalDf['name1'], finalDf['name2'], c = labels)
-ax.scatter(finalDf['name1'], finalDf['name2'], c = standards['mineral'].map(color_dict).values)
+labels
+finalDf.head()
+
+finalDf['cluster'] = labels
+finalDf.head()
+
+range(len(labels))
+np.unique(labels)
+
+c = 0
+finalDf['name1'][finalDf['cluster'] == c]
+
+fig = plt.figure(figsize = (14,9))
+ax1 = fig.add_subplot(1,1,1)
+ax1.set_xlabel('Principal Component 1', fontsize = 15)
+ax1.set_ylabel('Principal Component 2', fontsize = 15)
+ax1.set_title('2 component PCA', fontsize = 20)
+for c in np.unique(labels):
+    ax1.scatter(finalDf['name1'][finalDf['cluster'] == c], finalDf['name2'][finalDf['cluster'] == c], label = c, s=40)
+ax1.legend()
+plt.savefig('./images/pca_predicteddata.png')
 
 
 
 
+finalDf['mineral'] = standards['mineral']
+finalDf.head()
+
+np.unique(finalDf['mineral'])
+fig = plt.figure(figsize = (14,9))
+ax1 = fig.add_subplot(1,1,1)
+ax1.set_xlabel('Principal Component 1', fontsize = 15)
+ax1.set_ylabel('Principal Component 2', fontsize = 15)
+ax1.set_title('2 component PCA', fontsize = 20)
+# ax = fig.add_subplot(1,1,1)
+for m in np.unique(finalDf['mineral']):
+    ax1.scatter(finalDf['name1'][finalDf['mineral'] == m], finalDf['name2'][finalDf['mineral'] == m], label = m, s = 40)
+ax1.legend()
+plt.savefig('./images/pca_realdata.png')
