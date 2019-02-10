@@ -6,13 +6,12 @@ import sklearn
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
-<<<<<<< HEAD
 from pathlib import Path
 from skimage.io import imread, imshow
 
 # open example image
-import periodictable
-im = Image.open('challenge_data/dataset_1_opaques/obj1_8bt_Ca.tif')
+im = Image.open('challenge_data/dataset_1_opaques/obj2_8bt_Ca.tif')
+im.show()
 data = np.asarray(im)
 
 data = Image.open('challenge_data/dataset_1_opaques/standards_8bt_Ti.tif')
@@ -27,8 +26,6 @@ Image.open('challenge_data/dataset_1_opaques/standards_8bt_Fe.tif')
 
 #for element in element maps:
 
-name = 'obj2_32bt_Si.tif'
-name.split('_')[2].split('.')[0]
 
 # read in percent weights by element of the minerals in the standard
 weights = pd.read_csv('challenge_data/weights_to_minerals.csv')
@@ -60,14 +57,17 @@ for element in elements:
         fig = plt.figure()
         intensities.hist()
         plt.ylim(0,1300)
-        plt.title(element + " " + mine + "std = " + str(intensities.std()))
+        plt.title(element + " " + mine)
         xis = np.append(xis, np.array(intensities))
-        yis = np.append(yis, np.repeat(weight, len(intensities)))    
+        yis = np.append(yis, np.repeat(weight, len(intensities)))
+
     xis, yis = xis.reshape(-1,1), yis.reshape(-1,1)
     reg = lr.fit(xis,yis)
     #pred = reg.predict(xi_pred)
     reg.coef_
     coefs[element] = float(reg.coef_)
+
+coefs
 
 
 pred = reg.predict(xi_pred)
@@ -84,13 +84,17 @@ percent_weight_pred = pd.DataFrame(columns = mineral_standards.columns)
 percent_weight_pred
 
 mineral_standards.columns
+coefs = coefs[mineral_standards.columns[:-1]]
+coefs
+
 
 # apply coefficients from linear regression to pixel intensities from standard
-for col in mineral_standards.columns[:-1]:
-    percent_weight_pred[col] = mineral_standards[col].apply(lambda x: x*coefs[col])
+percent_weight_pred = mineral_standards.drop(['mineral'], axis = 1).apply(lambda x: x*coefs.values[0], axis = 1)
 
 percent_weight_pred
-
+percent_weight_pred[percent_weight_pred > 100] = 100
+percent_weight_pred['mineral'] = mineral_standards['mineral']
+percent_weight_pred.head()
 percent_weight_pred.to_csv("predicted_percentweight_standard.csv")
 
 
@@ -100,17 +104,28 @@ image_path = root / "dataset_1_opaques"
 list(image_path.glob('*'))
 
 obj2_minerals = [i for i in list(image_path.glob('obj2_32bt*.tif'))]
+obj2_minerals
 meteorite_element = [{'name': s.name.split('_')[2].split('.')[0], 'image':imread(s)} for s in image_path.glob('obj2_32bt*.tif')]
 meteorite_element
 
+mask = imread(root / "dataset_1_opaques/obj2_mask.tif")
+pixels = []
+for element in meteorite_element:
+    pixels.append(element['image'][mask > 0])
+
+pixels
+
+obj2_intensities = pd.DataFrame(np.dstack(pixels)[0], columns=[i['name'] for i in meteorite_element])
+obj2_intensities.head()
+
+"""
 obj2_intensities = pd.DataFrame(columns = [val['name'] for val in meteorite_element])
 for m in meteorite_element:
     element = m['name']
     obj2_intensities[element] = list(np.ravel(m['image']))
+"""
 
 
-
-obj2_intensities.head()
 
 obj2_percent_weight_pred = obj2_intensities.copy()
 obj2_percent_weight_pred.head()
@@ -120,41 +135,16 @@ coefs
 
 obj2_intensities.shape
 coefs.shape
-obj2_intensities.mul(coefs.values, axis = 1)
-new = obj2_intensities.mul(coefs.values, axis = 1)
-obj2_percent_weight_pred
-
-obj2_intensities.columns
-col = 'Si'
-coefs[col]
-obj2_intensities[col].apply(lambda x: float(x*coefs[col].values))
+#obj2_intensities.mul(coefs.values, axis = 1)
+#new = obj2_intensities.mul(coefs.values, axis = 1)
+#obj2_percent_weight_pred
 
 # apply coefficients from linear regression to pixel intensities from object 2
 obj2_percent_weight_pred = obj2_intensities.apply(lambda x: x*coefs.values[0], axis = 1)
-percent_weight_pred = mineral_standards.copy()
-coefs
-ms = mineral_standards.iloc[:, :-1]
-ms.shape
-ms.shape
-coefs.shape
-ms.mul(coefs.values, axis = 1)
 
-ms.apply(lambda x: print(x))
-ms = ms[1:10]
-coefs.values
-
-ms.apply(lambda x: x*coefs.values[0], axis = 1)
-
-
-
-
-
-ms.apply(lambda x: x*coefs.values, axis = 1)
-for col in mineral_standards.columns[:-1]:
-    percent_weight_pred[col] = mineral_standards[col].apply(lambda x: x*coefs[col])
-
-obj2_intensities.head()
 obj2_percent_weight_pred.head()
+# replace all cells with greater than 100 predicted weight with 100
+obj2_percent_weight_pred[obj2_percent_weight_pred > 100] = 100
+
 
 obj2_percent_weight_pred.to_csv("./challenge_data/predicted_percentweight_obj2.csv")
-
