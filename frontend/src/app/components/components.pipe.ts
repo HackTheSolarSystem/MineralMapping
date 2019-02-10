@@ -5,15 +5,13 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class GetColorPipe implements PipeTransform {
   private colorMap = {
-    1: 'red',
-    2: 'orange',
-    3: 'yellow',
-    4: 'green',
-    5: 'blue',
-    6: 'indigo',
-    7: 'violet',
-    8: 'grey',
-    9: 'brown',
+    "Troilite": 'red',
+    "Taenite": 'orange',
+    "Pyroxene": 'yellow',
+    "Pentlandite": 'green',
+    "Olivine": 'blue',
+    "Millerite": 'indigo',
+    "Kamacite": 'violet',
   };
   transform(number) {
     return this.colorMap[number];

@@ -1,9 +1,10 @@
-<embed class='mineral-image' src="../../../assets/obj1_8bt_Ti.tif">
+<!--<embed class='mineral-image' src="../../../assets/obj1_8bt_Ti.tif">-->
 <div class="grid-container">
-  <div *ngFor="let subArray of testArray" class="grid-row">
+  <div *ngFor="let subArray of realData" class="grid-row">
     <div *ngFor="let value of subArray"
           class="grid-value"
-          [ngStyle]="{'background-color': value | getColor }">{{value}}
+          [title]="value"
+          [ngStyle]="{'background-color': value | getColor }">
     </div>
   </div>
 </div>
