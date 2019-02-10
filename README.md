@@ -14,8 +14,8 @@
 ### Solution Description
 
 In this project we explored a few different options for classifying minerals based on the intensities of constituent elements in
-EMPA results. All of our approaches involved treating the intensity images as a set of n-dimesional points (1 dimension per
-consituent element) and classifying within that space. The approaches we explored were:
+EMPA results. All of our approaches involved treating the intensity images as a set of n-dimensional points (1 dimension per
+constituent element) and classifying within that space. The approaches we explored were:
 1. Linear classification via SVM
 2. Random forest classification
 3. Nearest neighbor classification
@@ -23,7 +23,7 @@ consituent element) and classifying within that space. The approaches we explore
 
 Broadly, all of the classifiers were trained based on images of standards gathered from pure samples of minerals that shared
 constituent elements with the minerals of interest. Each of 7 elements across 8 standards was combined into a 7-dimensional point,
-and the classifiers were tasked with finding models that separated the resultant cloud of points into clusters that correlated
+and the classifiers were tasked with finding models that separated the resulting cloud of points into clusters that correlated
 with the standards they came from.
 
 #### Weight Distribution Inference of Minerals
@@ -34,7 +34,7 @@ about the composition of the minerals they represented, e.g. the chemical formul
 a function that translated intensities to percent weights and vice versa.
 
 #### Linear Classification via SVM
-Given the generally discrete nature of chemical formulae the hypothesis behind linear classification was that the clusters would form
+Given the generally discrete nature of chemical formulae, the hypothesis behind linear classification was that the clusters would form
 around discrete intensity values of each element, which a linear model would be able to split very effectively. We found that this
 performed very well when we ran validation on the standards, but the model was sadly ineffective when applied to the actual meteorites.
 Much of this can probably be attributed to a lack of labeled data for many of the minerals of interest. In order to get around the
@@ -43,7 +43,7 @@ around the theoretical intensities given by weight distribution inference.
 
 #### Random Forest Classification
 Random forest classification builds many decision trees that produce a non-linear model for classification. In practice we found that
-this handled the real-object mineral case more robustly than the linear classification case.
+this approach handled the real-object mineral case more robustly than the linear classification case.
 
 #### Nearest Neighbor Classification
 Nearest neighbor was implemented by comparing intensities in the image to the theoretical intensities given by our inference above. Each
@@ -52,15 +52,14 @@ was very performant, since training only involved plotting one neighbor point pe
 comparing against one neighbor point per element.
 
 #### Cluster Inference via DBSCAN Clustering
-Our other approaches listed above all have the restriction of requiring labelled data for training. This solution approached the problem
-from another direction, taking it for granted that the data is separated into clusters, and just attempting to identify those clusters.
+The other approaches made use of supervised learning algorithms, and thus required labelled data for training. This unsupervised learning solution approached the problem
+from another direction, by attempting to identify clusters in the data and then match those clusters to minerals. 
 DBSCAN is a cluster-finding algorithm that starts with a set of points, representing clusters, and attepts to grow the clusters by
 adding new points to a cluster that are within a radius epsilon of points already within the cluster. When this approach worked it
-worked very well, but in our experience it was a fragile approach that required a lot of fine-tuning of the epsilon parameter. Another
-weakness of this approach is that correlating each cluster with a mineral is non-trivial, but theoretically could be done by attempting
-to map the centers of the found clusters to weight distributions of known minerals. However, the benefit of not having to know what
-minerals are of interest beforehand could be a huge bonus in cases where composition isn't well known, or there's a possibility of
-unexpected elements existing in the sample.
+worked very well, but in our experience it was a fragile approach that required a lot of fine-tuning of the epsilon parameter. Future attempts at this approach could loop through a range of parameter values and pick the parameter combination that best minimizes noise and produces reasonable clusters.
+
+Another
+challenge of this approach was correlating each cluster with mineral. We have started a solution to this problem by mapping the centroids of the clusters to weight distributions of the elements using the elements' molar mass. From here, we can perform pseudo-stoichiometry to approach a chemical formula. This process is difficult since some elements in minerals, such as oxygen, are not part of the intensity data but still are present in the minerals. The benefit of this clustering approach, however, is the ability to analyze meteorites without having a set list of minerals of interest beforehand.
 
 ### Installation Instructions
 
@@ -74,7 +73,7 @@ unexpected elements existing in the sample.
   - scikit-learn
   - scikit-image
 3. Much of the code is in the form of Jupyter notebook files, which can be accessed by running the `jupyter notebook` command and
-opening the .ipynb file in the browser window that opens.
+opening the .ipynb file in the browser window that opens. The code for the clustering approach can be found in `mineral_mapping_script.py` and `dbscan_clustering.py`.
 
 ### Frontend Overview
 
