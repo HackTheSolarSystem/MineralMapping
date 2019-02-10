@@ -6,7 +6,6 @@ import sklearn
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
-<<<<<<< HEAD
 from pathlib import Path
 from skimage.io import imread, imshow
 
@@ -60,7 +59,9 @@ for element in elements:
         fig = plt.figure()
         intensities.hist()
         plt.ylim(0,1300)
-        plt.title(element + " " + mine + "std = " + str(intensities.std()))
+        #plt.title(element + " " + mine + "std = " + str(intensities.std()))
+        name = element + "-in-" + mine + "_std_"+ str(round(intensities.std())) + ".png"
+        plt.savefig("images/" + name)
         xis = np.append(xis, np.array(intensities))
         yis = np.append(yis, np.repeat(weight, len(intensities)))    
     xis, yis = xis.reshape(-1,1), yis.reshape(-1,1)
@@ -98,6 +99,8 @@ percent_weight_pred.to_csv("predicted_percentweight_standard.csv")
 root = Path("/Users/hellenfellows/OneDrive - AMNH/BridgeUp/HackathonRepo/MineralMapping/challenge_data/")
 image_path = root / "dataset_1_opaques"
 list(image_path.glob('*'))
+
+
 
 obj2_minerals = [i for i in list(image_path.glob('obj2_32bt*.tif'))]
 meteorite_element = [{'name': s.name.split('_')[2].split('.')[0], 'image':imread(s)} for s in image_path.glob('obj2_32bt*.tif')]
@@ -156,5 +159,8 @@ for col in mineral_standards.columns[:-1]:
 obj2_intensities.head()
 obj2_percent_weight_pred.head()
 
-obj2_percent_weight_pred.to_csv("./challenge_data/predicted_percentweight_obj2.csv")
+obj2_percent_weight_pred.to_csv("/challenge_data/predicted_percentweight_obj2.csv")
 
+Image.open('challenge_data/dataset_1_opaques/obj2_8bt_Al.tif')
+
+Image.open('challenge_data/dataset_1_opaques/obj2_mask.tif')

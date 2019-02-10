@@ -4,13 +4,18 @@ import numpy as np
 from sklearn import metrics
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+import time
+
 
 standards = pd.read_csv('challenge_data/mineral_standards.csv')
 df = pd.read_csv('challenge_data/predicted_percentweight_standard.csv')
 df = df.fillna(0)
 
 x = df.values
+start = time.time()
 db = dbscan(eps = 10, min_samples = 20).fit(x)
+end = time.time()
+print(start - end)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype = bool)
 core_samples_mask[db.core_sample_indices_] = True
@@ -79,4 +84,4 @@ ax1.set_title('2 component PCA', fontsize = 20)
 for m in np.unique(finalDf['mineral']):
     ax1.scatter(finalDf['name1'][finalDf['mineral'] == m], finalDf['name2'][finalDf['mineral'] == m], label = m, s = 40)
 ax1.legend()
-plt.savefig('./images/pca_realdata.png')
+plt.savefig('./images/pca_realdata.png') 
