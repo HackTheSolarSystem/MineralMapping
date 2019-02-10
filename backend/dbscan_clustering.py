@@ -5,17 +5,25 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 import matplotlib.colors
 from sklearn.decomposition import PCA
+<<<<<<< HEAD
+import time
+
+=======
 from pathlib import Path
 from skimage.io import imread, imshow
 import numpy.ma as ma
 from collections import Counter
+>>>>>>> abe33c49951a1508a44f374fd84bf725e5ef2f7a
 
 standards = pd.read_csv('challenge_data/mineral_standards.csv')
 df = pd.read_csv('challenge_data/predicted_percentweight_standard.csv')
 df = df.fillna(0)
 
 x = df.values
+start = time.time()
 db = dbscan(eps = 10, min_samples = 20).fit(x)
+end = time.time()
+print(start - end)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype = bool)
 core_samples_mask[db.core_sample_indices_] = True
@@ -82,6 +90,9 @@ ax1.set_title('2 component PCA', fontsize = 20)
 for m in np.unique(finalDf['mineral']):
     ax1.scatter(finalDf['name1'][finalDf['mineral'] == m], finalDf['name2'][finalDf['mineral'] == m], label = m, s = 40)
 ax1.legend()
+<<<<<<< HEAD
+plt.savefig('./images/pca_realdata.png') 
+=======
 plt.savefig('./images/pca_realdata.png')
 
 # Clustering on object 1
@@ -249,3 +260,4 @@ plt.savefig('./images/obj2_cluster_pred.png')
 
 df_obj2['cluster'] = finalDf['cluster']
 df_obj2.to_csv("df_obj2_cluster.csv")
+>>>>>>> abe33c49951a1508a44f374fd84bf725e5ef2f7a

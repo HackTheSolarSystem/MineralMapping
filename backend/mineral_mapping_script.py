@@ -47,7 +47,10 @@ for element in elements:
         fig = plt.figure()
         intensities.hist()
         plt.ylim(0,1300)
-        plt.title(element + " " + mine)
+
+        #plt.title(element + " " + mine + "std = " + str(intensities.std()))
+        name = element + "-in-" + mine + "_std_"+ str(round(intensities.std())) + ".png"
+        plt.savefig("images/" + name)
         xis = np.append(xis, np.array(intensities))
         yis = np.append(yis, np.repeat(weight, len(intensities)))
 
@@ -128,6 +131,7 @@ obj1_percent_weight_pred[obj1_percent_weight_pred > 100] = 100
 obj1_percent_weight_pred.to_csv("./challenge_data/predicted_percentweight_obj1.csv")
 
 # calculate percent weight for object 2
+
 obj2_minerals = [i for i in list(image_path.glob('obj2_32bt*.tif'))]
 meteorite_element = [{'name': s.name.split('_')[2].split('.')[0], 'image':imread(s)} for s in image_path.glob('obj2_32bt*.tif')]
 
@@ -150,4 +154,4 @@ obj2_percent_weight_pred = obj2_intensities.apply(lambda x: x*coefs.values[0], a
 obj2_percent_weight_pred[obj2_percent_weight_pred > 100] = 100
 
 
-obj2_percent_weight_pred.to_csv("./challenge_data/predicted_percentweight_obj2.csv")
+obj2_percent_weight_pred.to_csv("/challenge_data/predicted_percentweight_obj2.csv")

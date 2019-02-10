@@ -75,3 +75,17 @@ unexpected elements existing in the sample.
   - scikit-image
 3. Much of the code is in the form of Jupyter notebook files, which can be accessed by running the `jupyter notebook` command and
 opening the .ipynb file in the browser window that opens.
+
+### Frontend Overview
+
+Additionally, this project looked to create a web app that would allow users to interact with the results of their analysis. The app renders each pixel of the output and colors it according to its mineral identification. Hovering over each pixel tells the user which mineral is there.
+
+Running this Angular app requires npm and [node.js](https://nodejs.org/en) v8.x+. From the root directory in your terminal, follow the below instructions:
+
+`cd frontend`
+
+`npm install`
+
+`npm start` or if you have the [angular cli installed](https://angular.io/guide/quickstart) `ng serve`
+
+Currently, the back and front ends of this repository are not connected by an API; the frontend renders the results from files preloaded into the `/frontend/src/app/constants` directory in JSON format.
