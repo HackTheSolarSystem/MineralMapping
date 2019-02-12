@@ -2,24 +2,15 @@ import argparse
 import json
 from pathlib import Path
 
-from lib import load_standards, construct_standards_df, get_standards_weights
+from lib import get_standards_characteristics
 
 
 def main(standards_dir, bits=32):
-    # Load standards and masks from tif into numpy arrays
-    print("Loading standards...")
-    standard_arrs, mask_arrs = load_standards(standards_dir, bits)
-    print(f"Successfully loaded {len(standard_arrs)} standards with {len(mask_arrs)} masks")
+    characteristics = get_standards_characteristics(standards_dir, bits)
+    print(characteristics)
 
-    # Construct the pandas DataFrame containing unmasked intensities of elements along with
-    # their corresponding mineral
-    df = construct_standards_df(standard_arrs, mask_arrs)
-    print()
-    print(f"Loaded {len(df)} rows")
-    print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
 
-    weights_df = get_standards_weights(standards_dir, df['mineral'].unique())
-    print(weights_df)
+
 
 
 def parse_args():

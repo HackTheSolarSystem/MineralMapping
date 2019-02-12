@@ -1,9 +1,11 @@
 from collections import OrderedDict
+import json
 
 import numpy as np
 import pandas as pd
 import periodictable
 from skimage.io import imread
+from sklearn.linear_model import LinearRegression
 import yaml
 
 def load_standards(standards_dir, bits):
@@ -64,4 +66,65 @@ def get_standards_weights(standards_dir, minerals):
         rows.append(weights)
 
     weights_df = pd.DataFrame.from_records(rows).fillna(0)
+    weights_df.columns = [str(i) + '_weight' if str(i)[0].isupper() else str(i) for i in weights_df.columns]
     return weights_df
+
+def calculate_element_characteristics(df, elements):
+    results = {}
+    for col in elements:
+        if f"{col}_weight" in df.columns:
+            x = df['%s_weight' % col].values.reshape(-1,1)
+            y = df[col]
+
+            model = LinearRegression()
+            model.fit(x,y)
+
+            d = {
+                'element': col,
+                'coef': model.coef_[0],
+                'intercept': model.intercept_,
+                # TODO Handle this hack with ignoring low weights?
+                'std': df[df['%s_weight' % col] > .01][col].std(),
+                'noise': df[df['%s_weight' % col] == 0][col].std()
+            }
+            results[col] = d
+    return results
+
+def get_standards_characteristics(standards_dir, bits=32):
+    """
+    Given a standards directory following a specified format, return a
+    dictionary describing the mapping between the spectrometer intensities
+    and an elements weight percentage in a mineral along with a description
+    of the distribution.
+
+    The return format is a dictionary of elements:dictionary in the following
+    format:
+
+        {
+            'element': element name,
+            'coef': a number to multiply the elements weight percentage to get
+                the expected intensity.
+            'intercept': The y intercept, should be near 0.
+            'std': The standard distribution of the intensity readings
+            'noise': The estimated noise in the readings for that element.
+        }
+    """
+    # Load standards and masks from tif into numpy arrays
+    print("Loading standards...")
+    standard_arrs, mask_arrs = load_standards(standards_dir, bits)
+    print(f"Successfully loaded {len(standard_arrs)} standards with {len(mask_arrs)} masks")
+
+    # Construct the pandas DataFrame containing unmasked intensities of elements along with
+    # their corresponding mineral
+    df = construct_standards_df(standard_arrs, mask_arrs)
+    print()
+    print(f"Loaded {len(df)} rows")
+    print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
+
+    # Load the expected mineral weights and perform a regression to get
+    # the mapping.
+    weights_df = get_standards_weights(standards_dir, df['mineral'].unique())
+    df = df.merge(weights_df, on='mineral')
+    elements = calculate_element_characteristics(df, standard_arrs.keys())
+
+    return elements
