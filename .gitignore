@@ -81,3 +81,5 @@ frontend/typings
 # System Files
 frontend/.DS_Store
 frontend/Thumbs.db
+
+**__pycache__

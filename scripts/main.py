@@ -1,43 +1,8 @@
 import argparse
-from collections import OrderedDict
 import json
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-from skimage.io import imread, imshow
-
-
-def load_standards(standards_dir, bits):
-    """ Loads standards and masks from .tif files into numpy arrays """
-    standard_imgs = {
-        f.name.split("_")[-1].split(".")[0]: imread(f)
-        for f in standards_dir.glob(f"standards_{bits}bt_*.tif")
-    }
-    standard_masks = OrderedDict({
-        f.name[:-len("_mask.tif")]: imread(f)
-        for f in standards_dir.glob("*_mask.tif")
-    })
-    return standard_imgs, standard_masks
-
-
-def construct_standards_df(standard_arrs, mask_arrs):
-    # Build individual standards dataframes that house individual element intensities
-    dfs = []
-    for mineral, mask_arr in mask_arrs.items():
-        pixels = []
-        for element, img_arr in standard_arrs.items():
-            pixels.append(img_arr[mask_arr > 0])
-
-        df = pd.DataFrame(
-            np.dstack(list(pixels))[0],
-            columns=standard_arrs.keys(),
-        )
-        df["mineral"] = mineral
-        dfs.append(df)
-
-    # Concatenate constituent standards dataframes into one source dataset
-    return pd.concat(dfs).reset_index(drop=True)
+from lib import load_standards, construct_standards_df, get_standards_weights
 
 
 def main(standards_dir, bits=32):
@@ -52,6 +17,9 @@ def main(standards_dir, bits=32):
     print()
     print(f"Loaded {len(df)} rows")
     print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
+
+    weights_df = get_standards_weights(standards_dir, df['mineral'].unique())
+    print(weights_df)
 
 
 def parse_args():
