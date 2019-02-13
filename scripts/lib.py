@@ -42,6 +42,22 @@ def construct_standards_df(standard_arrs, mask_arrs):
     return pd.concat(dfs).reset_index(drop=True)
 
 
+def load_standards_df(standards_dir, bits):
+    """ Load a dataframe containing all unmasked points in standards """
+    # Load standards and masks from tif into numpy arrays
+    print("Loading standards...")
+    standard_arrs, mask_arrs = load_standards(standards_dir, bits)
+    print(f"Successfully loaded {len(standard_arrs)} standards with {len(mask_arrs)} masks")
+
+    # Construct the pandas DataFrame containing unmasked intensities of elements along with
+    # their corresponding mineral
+    df = construct_standards_df(standard_arrs, mask_arrs)
+    print()
+    print(f"Loaded {len(df)} rows")
+    print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
+    return df
+
+
 def to_formula(formula_str):
     """ Convert a string to a formula object, return None if conversion fails """
     try:
@@ -143,22 +159,14 @@ def get_standards_characteristics(standards_dir, bits=32):
             'noise': The estimated noise in the readings for that element.
         }
     """
-    # Load standards and masks from tif into numpy arrays
-    print("Loading standards...")
-    standard_arrs, mask_arrs = load_standards(standards_dir, bits)
-    print(f"Successfully loaded {len(standard_arrs)} standards with {len(mask_arrs)} masks")
-
-    # Construct the pandas DataFrame containing unmasked intensities of elements along with
-    # their corresponding mineral
-    df = construct_standards_df(standard_arrs, mask_arrs)
-    print()
-    print(f"Loaded {len(df)} rows")
-    print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
+    # Load pixels from standards
+    df = load_standards_df(standards_dir, bits)
+    elements = [ v for v in df.columns.values if v != "mineral" ]
 
     # Load the expected mineral weights and perform a regression to get
     # the mapping.
     weights_df = get_standards_weights(standards_dir, df['mineral'].unique())
     df = df.merge(weights_df, on='mineral')
-    elements = calculate_element_characteristics(df, standard_arrs.keys())
+    elements = calculate_element_characteristics(df, elements)
 
     return elements
