@@ -8,6 +8,7 @@ from skimage.io import imread
 from sklearn.linear_model import LinearRegression
 import yaml
 
+
 def load_standards(standards_dir, bits):
     """ Loads standards and masks from .tif files into numpy arrays """
     standard_imgs = {
@@ -22,6 +23,7 @@ def load_standards(standards_dir, bits):
 
 
 def construct_standards_df(standard_arrs, mask_arrs):
+    """ Constructs a DataFrame containing all unmasked pixels in given standards """
     # Build individual standards dataframes that house individual element intensities
     dfs = []
     for mineral, mask_arr in mask_arrs.items():
@@ -39,56 +41,88 @@ def construct_standards_df(standard_arrs, mask_arrs):
     # Concatenate constituent standards dataframes into one source dataset
     return pd.concat(dfs).reset_index(drop=True)
 
+
+def to_formula(formula_str):
+    """ Convert a string to a formula object, return None if conversion fails """
+    try:
+        return periodictable.formula(formula_str)
+    except Exception:
+        return None
+
+
 def get_standards_weights(standards_dir, minerals):
+    """ Builds a DataFrame containing theoretical weight proportions for given minerals """
+    # Load custom weight proportion overrides
+    custom = {}
     if (standards_dir / 'standards.yaml').exists():
         custom = yaml.load((standards_dir / 'standards.yaml').open('r'))
-    else:
-        custom = {}
 
     rows = []
     for mineral in minerals:
-        if (mineral in custom) and ("formula" not in custom[mineral]):
+        if mineral not in custom:
+            # Assume the mineral name is its chemical formula
+            formula_str = mineral
+        elif "formula" in custom[mineral]:
+            # Get the formula from the overrides
+            formula_str = custom[mineral]["formula"]
+        else:
+            # Pull the weights directly from the overrides
             weights = custom[mineral]
             weights["mineral"] = mineral
             rows.append(weights)
             continue
-        elif (mineral in custom) and ("formula" in custom[mineral]):
-            formula = custom[mineral]["formula"]
-        else:
-            formula = mineral
 
+        # Attempt to parse the formula
+        formula = to_formula(formula_str)
+        if formula is None:
+            print(f"Invalid formula for mineral {mineral}: {formula_str}. Skipping")
+            continue
+
+        # Calculate the theoretical weights from the chemical formula
         weights = {
-            str(e): w for e,w
-            in periodictable.formula(formula).mass_fraction.items()
+            str(e): w for e, w
+            in formula.mass_fraction.items()
         }
-        weights["formula"] = formula
+        weights["formula"] = formula_str
         weights["mineral"] = mineral
         rows.append(weights)
 
+    # Build the dataframe
     weights_df = pd.DataFrame.from_records(rows).fillna(0)
-    weights_df.columns = [str(i) + '_weight' if str(i)[0].isupper() else str(i) for i in weights_df.columns]
+    # Append a suffix of _weight to each of the element columns
+    weights_df.columns = [
+        str(i) + '_weight' if to_formula(str(i)) is not None else str(i)
+        for i in weights_df.columns
+    ]
     return weights_df
 
+
 def calculate_element_characteristics(df, elements):
+    """ Contsruct a linear regression that fits the elements' intensities
+        to their calculated theoretical weights
+    """
     results = {}
     for col in elements:
-        if f"{col}_weight" in df.columns:
-            x = df['%s_weight' % col].values.reshape(-1,1)
-            y = df[col]
+        if f"{col}_weight" not in df.columns:
+            continue
 
-            model = LinearRegression()
-            model.fit(x,y)
+        x = df['%s_weight' % col].values.reshape(-1,1)
+        y = df[col]
 
-            d = {
-                'element': col,
-                'coef': model.coef_[0],
-                'intercept': model.intercept_,
-                # TODO Handle this hack with ignoring low weights?
-                'std': df[df['%s_weight' % col] > .01][col].std(),
-                'noise': df[df['%s_weight' % col] == 0][col].std()
-            }
-            results[col] = d
+        model = LinearRegression()
+        model.fit(x,y)
+
+        d = {
+            'element': col,
+            'coef': model.coef_[0],
+            'intercept': model.intercept_,
+            # TODO Handle this hack with ignoring low weights?
+            'std': df[df['%s_weight' % col] > .01][col].std(),
+            'noise': df[df['%s_weight' % col] == 0][col].std()
+        }
+        results[col] = d
     return results
+
 
 def get_standards_characteristics(standards_dir, bits=32):
     """

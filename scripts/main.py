@@ -10,9 +10,6 @@ def main(standards_dir, bits=32):
     print(characteristics)
 
 
-
-
-
 def parse_args():
     """ Build argument parser and get parsed args """
 
