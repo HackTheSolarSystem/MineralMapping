@@ -58,10 +58,22 @@ def load_standards_df(standards_dir, bits):
     return df
 
 
-def to_formula(formula_str):
-    """ Convert a string to a formula object, return None if conversion fails """
+def get_formula(formula_str, format="fraction"):
+    """
+        Convert a chemical formula string to a dictionary of element weights.
+        If format is "fraction" then return the fraction of the total weight
+        of the formula that that element comprises.
+        If format is "mass" then return the absolute mass of that element
+        in the molecule.
+
+    """
     try:
-        return periodictable.formula(formula_str)
+        formula = periodictable.formula(formula_str)
+        multiplier = 1 if format == "fraction" else formula.mass
+        return {
+            str(element): weight*multiplier for element, weight
+            in formula.mass_fraction.items()
+        }
     except Exception:
         return None
 
@@ -78,39 +90,30 @@ def get_standards_weights(standards_dir, minerals):
         if mineral not in custom:
             # Assume the mineral name is its chemical formula
             formula_str = mineral
-        elif "formula" in custom[mineral]:
+            weights = get_formula(formula_str)
+        elif isinstance(custom[mineral], str):
             # Get the formula from the overrides
-            formula_str = custom[mineral]["formula"]
+            formula_str = custom[mineral]
+            weights = get_formula(formula_str)
         else:
             # Pull the weights directly from the overrides
+            formula_str = None
             weights = custom[mineral]
-            weights["mineral"] = mineral
-            rows.append(weights)
-            continue
 
-        # Attempt to parse the formula
-        formula = to_formula(formula_str)
-        if formula is None:
+        if weights is None:
             print(f"Invalid formula for mineral {mineral}: {formula_str}. Skipping")
             continue
 
-        # Calculate the theoretical weights from the chemical formula
         weights = {
-            str(e): w for e, w
-            in formula.mass_fraction.items()
+            f"{element}_weight": weight
+            for element, weight in weights.items()
         }
-        weights["formula"] = formula_str
         weights["mineral"] = mineral
+        weights["formula"] = formula_str
         rows.append(weights)
 
     # Build the dataframe
-    weights_df = pd.DataFrame.from_records(rows).fillna(0)
-    # Append a suffix of _weight to each of the element columns
-    weights_df.columns = [
-        str(i) + '_weight' if to_formula(str(i)) is not None else str(i)
-        for i in weights_df.columns
-    ]
-    return weights_df
+    return pd.DataFrame.from_records(rows).fillna(0)
 
 
 def calculate_element_characteristics(df, elements):
@@ -170,3 +173,6 @@ def get_standards_characteristics(standards_dir, bits=32):
     elements = calculate_element_characteristics(df, elements)
 
     return elements
+
+def load_target_minerals(target_path):
+    return yaml.load(target_path.open('r'))

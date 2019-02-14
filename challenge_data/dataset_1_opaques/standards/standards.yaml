@@ -1,5 +1,4 @@
-rutile:
-    formula: 'TiO2'
+rutile: TiO2
 SCOlv:
     Si: .1908
     Fe: .0742
