@@ -1,0 +1,17 @@
+Millerite: NiS
+Troilite: FeS
+Pentlandite: FeNiS
+Wollastonite: Ca2Si2O6
+Anorthite: CaAl2Si2O8
+Diopside: CaMgSi2O6
+Albite: NaAlSi3O8
+
+Olivine:
+    - {elements: {Fe: [0, 1], Mg: [0, 1]}, quantity: 2}
+    - SiO4
+Pyroxene:
+    - {elements: {Fe: [0, 1], Mg: [0, 1]}}
+    - SiO3
+
+Taenite: {elements: {Fe: [.5, .6], Ni: [.4, .5]}}
+Kamacite: {elements: {Fe: [.9, .9], Ni: [.1, .1]}}
