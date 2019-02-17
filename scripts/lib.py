@@ -128,7 +128,9 @@ def calculate_element_characteristics(df, elements):
         x = df['%s_weight' % col].values.reshape(-1,1)
         y = df[col]
 
-        model = LinearRegression()
+        # Should fit_intercept be True? The assumption is that it passes
+        # through the origin
+        model = LinearRegression(fit_intercept=False)
         model.fit(x,y)
 
         d = {
@@ -136,7 +138,9 @@ def calculate_element_characteristics(df, elements):
             'coef': model.coef_[0],
             'intercept': model.intercept_,
             # TODO Handle this hack with ignoring low weights?
-            'std': df[df['%s_weight' % col] > .01][col].std(),
+            'std': df[
+                df['%s_weight' % col] > .01
+            ].groupby('mineral')[col].std().mean(),
             'noise': df[df['%s_weight' % col] == 0][col].std()
         }
         results[col] = d
