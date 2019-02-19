@@ -237,10 +237,17 @@ def todo():
 
 def main(standards_dir, bits, epsilon):
     # read the csv of mineral standards
+    # NOTE(peter): This was a CSV of all mineral standards pixels intensities
     standards = load_standards_df(standards_dir, bits)
+
     # read the csv of predicted percent weights
-    # TODO(peter): Stop redundantly calculating load_standards_df
-    df = get_standards_characteristics(standards_dir, bits)
+    # NOTE(peter): This was a CSV of all mineral standards pixels translated
+    #              to percent weights
+    # https://raw.githubusercontent.com/HackTheSolarSystem/MineralMapping/master/challenge_data/predicted_percentweight_standard.csv
+    # TODO(peter): Load this DataFrame with the correct information by combining
+    #              with mineral_mapping_script.py
+    df = standards.copy()
+    get_standards_characteristics(standards_dir, bits)
 
 
 def parse_args():
