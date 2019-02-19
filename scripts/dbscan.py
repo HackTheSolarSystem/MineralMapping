@@ -234,3 +234,32 @@ plt.savefig('./images/obj2_cluster_pred.png')
 # create csv with predicted weights and clusters
 df_obj2['cluster'] = finalDf['cluster']
 df_obj2.to_csv("df_obj2_cluster.csv")
+
+def main(standards_dir, bits, epsilon):
+    pass
+
+
+def parse_args():
+    def valid_dir(path_str):
+        p = Path(path_str)
+        if not p.exists():
+            raise argparse.ArgumentTypeError(f"Could not find path {path_str}")
+        if not p.is_dir():
+            raise argparse.ArgumentTypeError(f"Path {path_str} is not a directory")
+        return p
+
+    description = "Predict mineral content of a meteorite given spectrometer "
+                  "imagery via DBSCAN cluster inference."
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("--standards-dir", type=valid_dir, default=Path("."),
+                        help="path to directory containing standards")
+    parser.add_argument("--bits", type=int, choices=[8, 32], default=32,
+                        help="image bit-depth to use")
+    parser.add_argument("--epsilon", type=float, default=10.,
+                        help="epsilon radius to use for DBSCAN")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(**vars(args))
