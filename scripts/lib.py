@@ -9,6 +9,25 @@ from sklearn.linear_model import LinearRegression
 import yaml
 
 
+def load_images(directory, bits):
+    """ Loads meteorite sample images from .tif files into numpy arrays """
+    elements = []
+    pixels = []
+    shape = None
+    for path in directory.glob(f"*_{bits}bt_*.tif"):
+        #import pdb; pdb.set_trace()
+        #print(path.basename)
+        elements.append(path.stem.split("_")[-1])
+        if shape is None:
+            shape = imread(path).shape
+        pixels.append(imread(path).flatten())
+
+    df = pd.DataFrame(np.dstack(pixels)[0], columns=elements)
+    df = df.reset_index().rename(columns={"index": "order"})
+    return df, shape
+
+
+
 def load_standards(standards_dir, bits):
     """ Loads standards and masks from .tif files into numpy arrays """
     standard_imgs = {

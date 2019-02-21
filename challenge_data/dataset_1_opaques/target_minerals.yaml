@@ -16,9 +16,16 @@ Pyroxene:
 Taenite: {components: {Fe: [.5, .6], Ni: [.4, .5]}}
 Kamacite: {components: {Fe: [.9, .9], Ni: [.1, .1]}}
 
-TestHornblende:
-    - {components: {Ca: [.4, .6], Na: [.4, .6]}, quantity: [2, 3]}
-    - {components: {Mg: [.3, .7], Fe: [.2, .5], Al: [.2, .4]}, quantity: 5}
-    - {components: {Al: [.5, .5], Si: [.5, .5]}, quantity: 8}
-    - O22
-    - {components: {OH: [.3, .4], F: [.6, .7]}, quantity: 2}
+# TestHornblende:
+#     - {components: {Ca: [.4, .6], Na: [.4, .6]}, quantity: [2, 3]}
+#     - {components: {Mg: [.3, .7], Fe: [.2, .5], Al: [.2, .4]}, quantity: 5}
+#     - {components: {Al: [.5, .5], Si: [.5, .5]}, quantity: 8}
+#     - O22
+#     - {components: {OH: [.3, .4], F: [.6, .7]}, quantity: 2}
+#
+#
+# Example:
+#     - O
+#     - Fe2
+#     - H2O
+#     - (H2O)3
