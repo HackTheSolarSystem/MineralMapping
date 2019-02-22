@@ -11,7 +11,7 @@ from sklearn import metrics
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 
-from lib import load_standards_df
+from lib import load_standards_df, get_standards_characteristics
 
 
 def todo():
@@ -236,20 +236,38 @@ def todo():
     df_obj2.to_csv("df_obj2_cluster.csv")
 
 
+def get_predicted_weights(standards_df, standards_characteristics):
+    # create empty data frame to fill with predicted percent weights
+    percent_weight_pred = pd.DataFrame(columns=standards_df.columns)
+    # reorder coefficients to match order of columns in mineral_standards
+    coeffs = pd.DataFrame(index=['coeff'], columns=standards_df.columns[:-1])
+    for element, characteristics in standards_characteristics.items():
+        coeffs[element] = characteristics["coef"]
+    coeffs_mat = np.repeat(np.reciprocal(coeffs.values), len(standards_df), axis=0)
+
+    # apply coefficients from linear regression to pixel intensities from standard
+    percent_weight_pred = coeffs_mat * standards_df.drop(['mineral'], axis=1)
+    # if the predicted percent weight is over 100, set it to 100
+    percent_weight_pred[percent_weight_pred > 100] = 100
+    # replace NaN with 0
+    percent_weight_pred.fillna(0, inplace=True)
+
+    # add a mineral column
+    percent_weight_pred['mineral'] = standards_df['mineral']
+
+    return percent_weight_pred
+
+
 def main(standards_dir, bits, epsilon):
     # read the csv of mineral standards
-    # NOTE(peter): This was a CSV of all mineral standards pixels intensities
-    standards = load_standards_df(standards_dir, bits)
-    print(standards)
+    standards_df = load_standards_df(standards_dir, bits)
 
-    # read the csv of predicted percent weights
-    # NOTE(peter): This was a CSV of all mineral standards pixels translated
-    #              to percent weights
-    # https://raw.githubusercontent.com/HackTheSolarSystem/MineralMapping/master/challenge_data/predicted_percentweight_standard.csv
-    # TODO(peter): Load this DataFrame with the correct information by combining
-    #              with mineral_mapping_script.py
-    df = standards.copy()
-    get_standards_characteristics(standards_dir, bits)
+    # Get standards characteristics for weight to intensity coefficients
+    standards_characteristics = get_standards_characteristics(standards_dir, bits)
+
+    # Load DataFrame of predicted weights in standards
+    df = get_predicted_weights(standards_df, standards_characteristics)
+    print(df)
 
 
 def parse_args():
