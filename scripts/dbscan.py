@@ -1,3 +1,4 @@
+import argparse
 from collections import Counter
 
 import pandas as pd
@@ -239,6 +240,7 @@ def main(standards_dir, bits, epsilon):
     # read the csv of mineral standards
     # NOTE(peter): This was a CSV of all mineral standards pixels intensities
     standards = load_standards_df(standards_dir, bits)
+    print(standards)
 
     # read the csv of predicted percent weights
     # NOTE(peter): This was a CSV of all mineral standards pixels translated
@@ -259,7 +261,7 @@ def parse_args():
             raise argparse.ArgumentTypeError(f"Path {path_str} is not a directory")
         return p
 
-    description = "Predict mineral content of a meteorite given spectrometer "
+    description = "Predict mineral content of a meteorite given spectrometer " \
                   "imagery via DBSCAN cluster inference."
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--standards-dir", type=valid_dir, default=Path("."),
