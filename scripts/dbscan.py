@@ -253,6 +253,9 @@ def get_predicted_weights(standards_df, standards_characteristics):
     # replace NaN with 0
     percent_weight_pred.fillna(0, inplace=True)
 
+    # add column for unknown weight percent
+    percent_weight_pred['unknown'] = np.ones(len(percent_weight_pred)) - percent_weight_pred.sum(axis=1)
+
     # add a mineral column
     percent_weight_pred['mineral'] = standards_df['mineral']
 
@@ -273,7 +276,7 @@ def main(standards_dir, bits, epsilon):
     # Fit using DBSCAN
     print("Running DBSCAN clustering...")
     start = time.time()
-    db = DBSCAN(eps=0.1, min_samples=20).fit(x)
+    db = DBSCAN(eps=0.02, min_samples=20).fit(x)
     end = time.time()
     print(f"Clustering ran in {end-start} seconds")
 
