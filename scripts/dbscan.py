@@ -1,5 +1,6 @@
 import argparse
 from collections import Counter
+import time
 
 import pandas as pd
 from pathlib import Path
@@ -267,7 +268,52 @@ def main(standards_dir, bits, epsilon):
 
     # Load DataFrame of predicted weights in standards
     df = get_predicted_weights(standards_df, standards_characteristics)
-    print(df)
+    x = df.drop(columns="mineral").values
+
+    # Fit using DBSCAN
+    print("Running DBSCAN clustering...")
+    start = time.time()
+    db = DBSCAN(eps=0.1, min_samples=20).fit(x)
+    end = time.time()
+    print(f"Clustering ran in {end-start} seconds")
+
+    # Plot clustering results
+    core_samples_mask = np.zeros_like(db.labels_, dtype = bool)
+    core_samples_mask[db.core_sample_indices_] = True
+    labels = db.labels_
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    n_noise_ = list(labels).count(-1)
+
+    # See number of clusters and number of unclustered (noise) points
+    print('Estimated number of clusters: %d' % n_clusters_)
+    print('Estimated number of noise points: %d' % n_noise_)
+
+    # create a PCA for visualization
+    pca = PCA(n_components = 2)
+    principleComponents = pca.fit_transform(x)
+    principalDf= pd.DataFrame(data = principleComponents, columns = ['name1', 'name2'])
+    finalDf = pd.concat([principalDf, pd.Series(labels)], axis = 1)
+    final_minerals = pd.concat([principalDf, standards_df['mineral']], axis = 1)
+
+    mn = list(set(standards_df['mineral'].values))
+    color_dict = {}
+    for i, val in enumerate(mn):
+        color_dict[val] = i
+    standards_df['mineral'].map(color_dict)
+
+    # add a cluster column
+    finalDf['cluster'] = labels
+
+    # plot PCA showing the different clusters
+    fig = plt.figure(figsize = (14,9))
+    ax1 = fig.add_subplot(1,1,1)
+    ax1.set_xlabel('Principal Component 1', fontsize = 15)
+    ax1.set_ylabel('Principal Component 2', fontsize = 15)
+    ax1.set_title('2 component PCA', fontsize = 20)
+    for c in np.unique(labels):
+        ax1.scatter(finalDf['name1'][finalDf['cluster'] == c], finalDf['name2'][finalDf['cluster'] == c], label = c, s=40)
+    ax1.legend()
+    plt.show()
 
 
 def parse_args():
