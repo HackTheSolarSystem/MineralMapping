@@ -276,7 +276,7 @@ def main(standards_dir, bits, epsilon):
     # Fit using DBSCAN
     print("Running DBSCAN clustering...")
     start = time.time()
-    db = DBSCAN(eps=0.02, min_samples=20).fit(x)
+    db = DBSCAN(eps=epsilon, min_samples=20, n_jobs=-1).fit(x)
     end = time.time()
     print(f"Clustering ran in {end-start} seconds")
 
@@ -289,7 +289,7 @@ def main(standards_dir, bits, epsilon):
 
     # See number of clusters and number of unclustered (noise) points
     print('Estimated number of clusters: %d' % n_clusters_)
-    print('Estimated number of noise points: %d' % n_noise_)
+    print('Estimated number of noise points: %d/%d (%.2f%%)' % (n_noise_, len(x), n_noise_/len(x)*100))
 
     # create a PCA for visualization
     pca = PCA(n_components = 2)
@@ -335,7 +335,7 @@ def parse_args():
                         help="path to directory containing standards")
     parser.add_argument("--bits", type=int, choices=[8, 32], default=32,
                         help="image bit-depth to use")
-    parser.add_argument("--epsilon", type=float, default=10.,
+    parser.add_argument("--epsilon", type=float, default=0.02,
                         help="epsilon radius to use for DBSCAN")
     return parser.parse_args()
 
