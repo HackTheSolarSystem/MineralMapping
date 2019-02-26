@@ -16,68 +16,6 @@ from lib import load_standards_df, get_standards_characteristics
 
 
 def todo():
-    # change NA values to 0
-    df = df.fillna(0)
-    x = df.values
-    # run DBSCAN Clustering
-    # Need to play with the eps and min_samples parameters to get reasonable results
-    # Future solution should loop through various parameter values to find reasonable obj1_minerals
-    # In general, to consolidate to fewer clusters, increase the parameters, and vicee versa
-    db = DBSCAN(eps = 10, min_samples = 20).fit(x)
-
-    core_samples_mask = np.zeros_like(db.labels_, dtype = bool)
-    core_samples_mask[db.core_sample_indices_] = True
-    labels = db.labels_
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
-
-    # See number of clusters and number of unclustered (noise) points
-    print('Estimated number of clusters: %d' % n_clusters_)
-    print('Estimated number of noise points: %d' % n_noise_)
-
-    # create a PCA for visualization
-    pca = PCA(n_components = 2)
-    principleComponents = pca.fit_transform(x)
-    principalDf= pd.DataFrame(data = principleComponents, columns = ['name1', 'name2'])
-    finalDf = pd.concat([principalDf, pd.Series(labels)], axis = 1)
-    final_minerals = pd.concat([principalDf, standards['mineral']], axis = 1)
-
-    mn = list(set(standards['mineral'].values))
-    color_dict = {}
-    for i, val in enumerate(mn):
-        color_dict[val] = i
-    standards['mineral'].map(color_dict)
-
-    # add a cluster column
-    finalDf['cluster'] = labels
-
-    # plot PCA showing the different clusters
-    fig = plt.figure(figsize = (14,9))
-    ax1 = fig.add_subplot(1,1,1)
-    ax1.set_xlabel('Principal Component 1', fontsize = 15)
-    ax1.set_ylabel('Principal Component 2', fontsize = 15)
-    ax1.set_title('2 component PCA', fontsize = 20)
-    for c in np.unique(labels):
-        ax1.scatter(finalDf['name1'][finalDf['cluster'] == c], finalDf['name2'][finalDf['cluster'] == c], label = c, s=40)
-    ax1.legend()
-    plt.savefig('./images/pca_predicteddata.png')
-
-    # add a mineral column
-    finalDf['mineral'] = standards['mineral']
-
-    # plot PCA showing the location of the actual minerals
-    np.unique(finalDf['mineral'])
-    fig = plt.figure(figsize = (14,9))
-    ax1 = fig.add_subplot(1,1,1)
-    ax1.set_xlabel('Principal Component 1', fontsize = 15)
-    ax1.set_ylabel('Principal Component 2', fontsize = 15)
-    ax1.set_title('2 component PCA', fontsize = 20)
-    # ax = fig.add_subplot(1,1,1)
-    for m in np.unique(finalDf['mineral']):
-        ax1.scatter(finalDf['name1'][finalDf['mineral'] == m], finalDf['name2'][finalDf['mineral'] == m], label = m, s = 40)
-    ax1.legend()
-    plt.savefig('./images/pca_realdata.png')
-
     # Clustering on object 1
     # read csv of predicteed percent weights for object 1
     df_obj1 = pd.read_csv('challenge_data/predicted_percentweight_obj1.csv')
@@ -254,7 +192,8 @@ def get_predicted_weights(standards_df, standards_characteristics):
     percent_weight_pred.fillna(0, inplace=True)
 
     # add column for unknown weight percent
-    percent_weight_pred['unknown'] = np.ones(len(percent_weight_pred)) - percent_weight_pred.sum(axis=1)
+    percent_weight_pred['unknown'] = np.ones(len(percent_weight_pred)) - \
+            percent_weight_pred.sum(axis=1)
 
     # add a mineral column
     percent_weight_pred['mineral'] = standards_df['mineral']
