@@ -258,12 +258,32 @@ def get_predicted_weights(standards_df, standards_characteristics):
 
     # add a mineral column
     percent_weight_pred['mineral'] = standards_df['mineral']
-
     return percent_weight_pred
 
 
+def plot_pca(x, labels):
+    # create a PCA for visualization
+    pca = PCA(n_components=2)
+    components = pca.fit_transform(x)
+    principal_df = pd.DataFrame(data=components, columns=['name1', 'name2'])
+    principal_df['cluster'] = labels
+
+    # plot PCA showing the different clusters
+    fig = plt.figure(figsize=(14, 9))
+    ax1 = fig.add_subplot(1, 1, 1)
+    ax1.set_xlabel('Principal Component 1', fontsize=15)
+    ax1.set_ylabel('Principal Component 2', fontsize=15)
+    ax1.set_title('2 component PCA', fontsize=20)
+    for c in np.unique(labels):
+        x_pts = principal_df['name1'][principal_df['cluster'] == c]
+        y_pts = principal_df['name2'][principal_df['cluster'] == c]
+        ax1.scatter(x_pts, y_pts, label=c, s=40)
+    ax1.legend()
+    plt.show()
+
+
 def main(standards_dir, bits, epsilon):
-    # read the csv of mineral standards
+    # Load standards intensity dataframe
     standards_df = load_standards_df(standards_dir, bits)
 
     # Get standards characteristics for weight to intensity coefficients
@@ -280,43 +300,15 @@ def main(standards_dir, bits, epsilon):
     end = time.time()
     print(f"Clustering ran in {end-start} seconds")
 
-    # Plot clustering results
-    core_samples_mask = np.zeros_like(db.labels_, dtype = bool)
-    core_samples_mask[db.core_sample_indices_] = True
+    # Get clustering stats
     labels = db.labels_
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
+    n_clusters = len(set(l for l in labels if l >= 0))
+    n_noise = list(labels).count(-1)
+    print(f"Estimated number of clusters: {n_clusters}")
+    print(f"Estimated number of noise points: {n_noise}/{len(x)} ({n_noise*100/len(x):.2f}%)")
 
-    # See number of clusters and number of unclustered (noise) points
-    print('Estimated number of clusters: %d' % n_clusters_)
-    print('Estimated number of noise points: %d/%d (%.2f%%)' % (n_noise_, len(x), n_noise_/len(x)*100))
-
-    # create a PCA for visualization
-    pca = PCA(n_components = 2)
-    principleComponents = pca.fit_transform(x)
-    principalDf= pd.DataFrame(data = principleComponents, columns = ['name1', 'name2'])
-    finalDf = pd.concat([principalDf, pd.Series(labels)], axis = 1)
-    final_minerals = pd.concat([principalDf, standards_df['mineral']], axis = 1)
-
-    mn = list(set(standards_df['mineral'].values))
-    color_dict = {}
-    for i, val in enumerate(mn):
-        color_dict[val] = i
-    standards_df['mineral'].map(color_dict)
-
-    # add a cluster column
-    finalDf['cluster'] = labels
-
-    # plot PCA showing the different clusters
-    fig = plt.figure(figsize = (14,9))
-    ax1 = fig.add_subplot(1,1,1)
-    ax1.set_xlabel('Principal Component 1', fontsize = 15)
-    ax1.set_ylabel('Principal Component 2', fontsize = 15)
-    ax1.set_title('2 component PCA', fontsize = 20)
-    for c in np.unique(labels):
-        ax1.scatter(finalDf['name1'][finalDf['cluster'] == c], finalDf['name2'][finalDf['cluster'] == c], label = c, s=40)
-    ax1.legend()
-    plt.show()
+    # Plot PCA
+    plot_pca(x, labels)
 
 
 def parse_args():
