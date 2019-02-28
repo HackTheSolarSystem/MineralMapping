@@ -2,6 +2,7 @@ import argparse
 from collections import Counter
 import time
 
+print("Importing dependencies...")
 import pandas as pd
 from pathlib import Path
 import numpy as np
@@ -220,13 +221,16 @@ def plot_pca(x, labels):
 
 
 def main(meteorite_dir, standards_dir, bits, epsilon):
-    # Load standards intensity dataframe
+    # Load meteorite intensity dataframe
+    print("Loading meteorite images...")
     meteorite_df, shape = load_images(meteorite_dir, bits)
 
     # Get standards characteristics for weight to intensity coefficients
+    print("Loading standards characteristics...")
     standards_characteristics = get_standards_characteristics(standards_dir, bits)
 
     # Load DataFrame of predicted weights in standards
+    print("Getting meteorite predicted weight percents...")
     df = get_predicted_weights(meteorite_df, standards_characteristics)
     x = df.values
 
@@ -246,6 +250,10 @@ def main(meteorite_dir, standards_dir, bits, epsilon):
 
     # Plot PCA
     plot_pca(x, labels)
+
+    # Show image overlayed on actual meteorite
+    fig = plt.figure(figsize=(14,9))
+    plt.imshow(labels, cmap="tab10")
 
 
 def parse_args():

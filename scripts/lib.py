@@ -64,16 +64,11 @@ def construct_standards_df(standard_arrs, mask_arrs):
 def load_standards_df(standards_dir, bits):
     """ Load a dataframe containing all unmasked points in standards """
     # Load standards and masks from tif into numpy arrays
-    print("Loading standards...")
     standard_arrs, mask_arrs = load_standards(standards_dir, bits)
-    print(f"Successfully loaded {len(standard_arrs)} standards with {len(mask_arrs)} masks")
 
     # Construct the pandas DataFrame containing unmasked intensities of elements along with
     # their corresponding mineral
     df = construct_standards_df(standard_arrs, mask_arrs)
-    print()
-    print(f"Loaded {len(df)} rows")
-    print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
     return df
 
 
