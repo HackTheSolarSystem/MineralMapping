@@ -12,7 +12,7 @@ from sklearn import metrics
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 
-from lib import load_standards_df, get_standards_characteristics
+from lib import load_images, load_standards_df, get_standards_characteristics
 
 
 def todo():
@@ -175,17 +175,17 @@ def todo():
     df_obj2.to_csv("df_obj2_cluster.csv")
 
 
-def get_predicted_weights(standards_df, standards_characteristics):
+def get_predicted_weights(obj_df, standards_characteristics):
     # create empty data frame to fill with predicted percent weights
-    percent_weight_pred = pd.DataFrame(columns=standards_df.columns)
+    percent_weight_pred = pd.DataFrame(columns=obj_df.columns)
     # reorder coefficients to match order of columns in mineral_standards
-    coeffs = pd.DataFrame(index=['coeff'], columns=standards_df.columns[:-1])
+    coeffs = pd.DataFrame(index=['coeff'], columns=obj_df.columns[:-1])
     for element, characteristics in standards_characteristics.items():
         coeffs[element] = characteristics["coef"]
-    coeffs_mat = np.repeat(np.reciprocal(coeffs.values), len(standards_df), axis=0)
+    coeffs_mat = np.repeat(np.reciprocal(coeffs.values), len(obj_df), axis=0)
 
     # apply coefficients from linear regression to pixel intensities from standard
-    percent_weight_pred = coeffs_mat * standards_df.drop(['mineral'], axis=1)
+    percent_weight_pred = coeffs_mat * obj_df
     # if the predicted percent weight is over 100, set it to 100
     percent_weight_pred[percent_weight_pred > 100] = 100
     # replace NaN with 0
@@ -195,8 +195,6 @@ def get_predicted_weights(standards_df, standards_characteristics):
     percent_weight_pred['unknown'] = np.ones(len(percent_weight_pred)) - \
             percent_weight_pred.sum(axis=1)
 
-    # add a mineral column
-    percent_weight_pred['mineral'] = standards_df['mineral']
     return percent_weight_pred
 
 
@@ -221,16 +219,16 @@ def plot_pca(x, labels):
     plt.show()
 
 
-def main(standards_dir, bits, epsilon):
+def main(meteorite_dir, standards_dir, bits, epsilon):
     # Load standards intensity dataframe
-    standards_df = load_standards_df(standards_dir, bits)
+    meteorite_df, shape = load_images(meteorite_dir, bits)
 
     # Get standards characteristics for weight to intensity coefficients
     standards_characteristics = get_standards_characteristics(standards_dir, bits)
 
     # Load DataFrame of predicted weights in standards
-    df = get_predicted_weights(standards_df, standards_characteristics)
-    x = df.drop(columns="mineral").values
+    df = get_predicted_weights(meteorite_df, standards_characteristics)
+    x = df.values
 
     # Fit using DBSCAN
     print("Running DBSCAN clustering...")
@@ -262,6 +260,8 @@ def parse_args():
     description = "Predict mineral content of a meteorite given spectrometer " \
                   "imagery via DBSCAN cluster inference."
     parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("--meteorite-dir", type=valid_dir, default=Path("."),
+                        help="path to directory containing mineral images")
     parser.add_argument("--standards-dir", type=valid_dir, default=Path("."),
                         help="path to directory containing standards")
     parser.add_argument("--bits", type=int, choices=[8, 32], default=32,
