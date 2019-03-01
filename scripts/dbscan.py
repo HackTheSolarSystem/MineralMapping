@@ -218,7 +218,7 @@ def plot_pca(x, labels):
         y_pts = principal_df['name2'][principal_df['cluster'] == c]
         ax1.scatter(x_pts, y_pts, label=c, s=40)
     ax1.legend()
-    plt.show()
+    plt.savefig("pca.png")
 
 
 def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, disable_unknown=False):
@@ -256,7 +256,7 @@ def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, disable_unkno
     fig = plt.figure(figsize=(14,9))
     img_arr = np.reshape(labels, shape) + 1
     plt.imshow(img_arr, cmap="tab10")
-    plt.show()
+    plt.savefig("obj.png")
 
 
 def parse_args():
