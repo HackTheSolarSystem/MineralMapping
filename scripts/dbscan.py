@@ -1,5 +1,6 @@
 import argparse
 from collections import Counter
+import json
 import time
 
 print("Importing dependencies...")
@@ -244,10 +245,15 @@ def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, disable_unkno
 
     # Get clustering stats
     labels = db.labels_
-    n_clusters = len(set(l for l in labels if l >= 0))
-    n_noise = list(labels).count(-1)
-    print(f"Estimated number of clusters: {n_clusters}")
+    clusters, counts = np.unique(labels, return_counts=True)
+    cluster_counts = {
+        str(cluster): int(count)
+        for cluster, count in zip(clusters, counts)
+    }
+    n_noise = cluster_counts["-1"]
+    print(f"Estimated number of clusters: {len(clusters)}")
     print(f"Estimated number of noise points: {n_noise}/{len(x)} ({n_noise*100/len(x):.2f}%)")
+    print(f"Counts per cluster:\n{json.dumps(cluster_counts, indent=4)}")
 
     # Plot PCA
     plot_pca(x, labels)
