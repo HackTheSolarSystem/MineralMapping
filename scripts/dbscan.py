@@ -9,7 +9,6 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 from skimage.io import imread, imshow
-from sklearn import metrics
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 
@@ -176,7 +175,7 @@ def todo():
     df_obj2.to_csv("df_obj2_cluster.csv")
 
 
-def get_predicted_weights(obj_df, standards_characteristics):
+def get_predicted_weights(obj_df, standards_characteristics, calculate_unknown=True):
     # create empty data frame to fill with predicted percent weights
     percent_weight_pred = pd.DataFrame(columns=obj_df.columns)
     # reorder coefficients to match order of columns in mineral_standards
@@ -192,9 +191,11 @@ def get_predicted_weights(obj_df, standards_characteristics):
     # replace NaN with 0
     percent_weight_pred.fillna(0, inplace=True)
 
-    # add column for unknown weight percent
-    percent_weight_pred['unknown'] = np.ones(len(percent_weight_pred)) - \
-            percent_weight_pred.sum(axis=1)
+    if calculate_unknown:
+        # add column for unknown weight percent
+        percent_weight_pred['unknown'] = np.ones(len(percent_weight_pred)) - \
+                percent_weight_pred.sum(axis=1)
+        percent_weight_pred['unknown'][percent_weight_pred['unknown'] < 0] = 0
 
     return percent_weight_pred
 
@@ -220,7 +221,7 @@ def plot_pca(x, labels):
     plt.show()
 
 
-def main(meteorite_dir, standards_dir, bits, epsilon):
+def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, disable_unknown=False):
     # Load meteorite intensity dataframe
     print("Loading meteorite images...")
     meteorite_df, shape = load_images(meteorite_dir, bits)
@@ -231,13 +232,13 @@ def main(meteorite_dir, standards_dir, bits, epsilon):
 
     # Load DataFrame of predicted weights in standards
     print("Getting meteorite predicted weight percents...")
-    df = get_predicted_weights(meteorite_df, standards_characteristics)
+    df = get_predicted_weights(meteorite_df, standards_characteristics, calculate_unknown=not disable_unknown)
     x = df.values
 
     # Fit using DBSCAN
     print("Running DBSCAN clustering...")
     start = time.time()
-    db = DBSCAN(eps=epsilon, min_samples=20, n_jobs=-1).fit(x)
+    db = DBSCAN(eps=epsilon, min_samples=min_samples, n_jobs=-1).fit(x)
     end = time.time()
     print(f"Clustering ran in {end-start} seconds")
 
@@ -253,7 +254,9 @@ def main(meteorite_dir, standards_dir, bits, epsilon):
 
     # Show image overlayed on actual meteorite
     fig = plt.figure(figsize=(14,9))
-    plt.imshow(labels, cmap="tab10")
+    img_arr = np.reshape(labels, shape) + 1
+    plt.imshow(img_arr, cmap="tab10")
+    plt.show()
 
 
 def parse_args():
@@ -276,6 +279,10 @@ def parse_args():
                         help="image bit-depth to use")
     parser.add_argument("--epsilon", type=float, default=0.02,
                         help="epsilon radius to use for DBSCAN")
+    parser.add_argument("--min-samples", type=int, default=20,
+                        help="minimum samples per cluster to use for DBSCAN")
+    parser.add_argument("--disable-unknown", action="store_true",
+                        help="don't calculate unknown weight percent column")
     return parser.parse_args()
 
 
