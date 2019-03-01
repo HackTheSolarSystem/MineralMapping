@@ -262,6 +262,7 @@ def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, disable_unkno
     fig = plt.figure(figsize=(14,9))
     img_arr = np.reshape(labels, shape) + 1
     plt.imshow(img_arr, cmap="tab10")
+    plt.suptitle(f"Epsilon: {epsilon}, Min Samples: {min_samples}")
     plt.savefig("obj.png")
 
 
