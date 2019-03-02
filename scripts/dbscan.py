@@ -11,6 +11,7 @@ import numpy.ma as ma
 import matplotlib.pyplot as plt
 from skimage.io import imread, imshow
 from sklearn.cluster import DBSCAN
+from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA
 
 from lib import load_images, load_standards_df, get_standards_characteristics
@@ -62,7 +63,7 @@ def plot_pca(x, labels):
     plt.savefig("pca.png")
 
 
-def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, disable_unknown=False):
+def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, num_components, disable_unknown=False):
     # Load meteorite intensity dataframe
     print("Loading meteorite images...")
     meteorite_df, shape = load_images(meteorite_dir, bits)
@@ -77,22 +78,30 @@ def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, disable_unkno
     x = df.values
 
     # Fit using DBSCAN
-    print("Running DBSCAN clustering...")
+    #print("Running DBSCAN clustering...")
+    #start = time.time()
+    #db = DBSCAN(eps=epsilon, min_samples=min_samples, n_jobs=-1).fit(x)
+    #end = time.time()
+    #print(f"Clustering ran in {end-start} seconds")
+    #labels = db.labels_
+
+    # Fit using GMM
+    print("Running Gaussian Mixture clustering...")
     start = time.time()
-    db = DBSCAN(eps=epsilon, min_samples=min_samples, n_jobs=-1).fit(x)
+    labels = GaussianMixture(n_components=num_components).fit_predict(x)
     end = time.time()
     print(f"Clustering ran in {end-start} seconds")
+    print("LABELS ARE:", labels)
 
     # Get clustering stats
-    labels = db.labels_
     clusters, counts = np.unique(labels, return_counts=True)
     cluster_counts = {
         str(cluster): int(count)
         for cluster, count in zip(clusters, counts)
     }
-    n_noise = cluster_counts["-1"]
+    #n_noise = cluster_counts["-1"]
     print(f"Estimated number of clusters: {len(clusters)}")
-    print(f"Estimated number of noise points: {n_noise}/{len(x)} ({n_noise*100/len(x):.2f}%)")
+    #print(f"Estimated number of noise points: {n_noise}/{len(x)} ({n_noise*100/len(x):.2f}%)")
     print(f"Counts per cluster:\n{json.dumps(cluster_counts, indent=4)}")
 
     # Plot PCA
@@ -128,6 +137,8 @@ def parse_args():
                         help="epsilon radius to use for DBSCAN")
     parser.add_argument("--min-samples", type=int, default=20,
                         help="minimum samples per cluster to use for DBSCAN")
+    parser.add_argument("--num-components", type=int, default=10,
+                        help="number of components to use for GMM")
     parser.add_argument("--disable-unknown", action="store_true",
                         help="don't calculate unknown weight percent column")
     return parser.parse_args()
