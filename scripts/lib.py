@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 import yaml
 
 
-def load_images(directory, bits):
+def load_images(directory, bits, mask=None):
     """ Loads meteorite sample images from .tif files into numpy arrays """
     elements = []
     pixels = []
@@ -24,6 +24,12 @@ def load_images(directory, bits):
 
     df = pd.DataFrame(np.dstack(pixels)[0], columns=elements)
     df = df.reset_index().rename(columns={"index": "order"})
+
+    if mask:
+        df['mask'] = (imread(mask).flatten() > 0).astype(int)
+    else:
+        df['mask'] = 1
+
     return df, shape
 
 
@@ -166,7 +172,7 @@ def calculate_element_characteristics(df, elements):
     return results
 
 
-def get_standards_characteristics(standards_dir, bits=32):
+def get_standards_characteristics(standards_dir, bits=32, manual_elements=True):
     """
     Given a standards directory following a specified format, return a
     dictionary describing the mapping between the spectrometer intensities
@@ -194,6 +200,10 @@ def get_standards_characteristics(standards_dir, bits=32):
     weights_df = get_standards_weights(standards_dir, df['mineral'].unique())
     df = df.merge(weights_df, on='mineral')
     elements = calculate_element_characteristics(df, elements)
+
+    # Include manual element characteristics
+    if manual_elements and (standards_dir / 'elements.yaml').exists():
+        elements.update(yaml.load((standards_dir / 'elements.yaml').open('r')))
 
     return elements
 
