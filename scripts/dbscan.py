@@ -88,7 +88,7 @@ def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, num_component
     # Fit using GMM
     print("Running Gaussian Mixture clustering...")
     start = time.time()
-    labels = GaussianMixture(n_components=num_components).fit_predict(x)
+    labels = GaussianMixture(covariance_type="diag", n_components=num_components).fit_predict(x)
     end = time.time()
     print(f"Clustering ran in {end-start} seconds")
     print("LABELS ARE:", labels)
