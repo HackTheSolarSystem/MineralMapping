@@ -37,7 +37,7 @@ def get_predicted_weights(obj_df, standards_characteristics, calculate_unknown=T
         # add column for unknown weight percent
         percent_weight_pred['unknown'] = np.ones(len(percent_weight_pred)) - \
                 percent_weight_pred.sum(axis=1)
-        percent_weight_pred['unknown'] = np.minimum(percent_weight_pred['unknown'], np.zeros(percent_weight_pred['unknown'].shape))
+        percent_weight_pred['unknown'] = np.maximum(percent_weight_pred['unknown'], np.zeros(percent_weight_pred['unknown'].shape))
 
     return percent_weight_pred
 
