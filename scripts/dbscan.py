@@ -73,9 +73,9 @@ def main(meteorite_dir, standards_dir, bits, epsilon, min_samples, num_component
     standards_characteristics = get_standards_characteristics(standards_dir, bits)
 
     # Load DataFrame of predicted weights in standards
-    print("Getting meteorite predicted weight percents...")
-    df = get_predicted_weights(meteorite_df, standards_characteristics, calculate_unknown=not disable_unknown)
-    x = df.values
+    #print("Getting meteorite predicted weight percents...")
+    #df = get_predicted_weights(meteorite_df, standards_characteristics, calculate_unknown=not disable_unknown)
+    x = meteorite_df.values
 
     # Fit using DBSCAN
     #print("Running DBSCAN clustering...")
