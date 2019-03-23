@@ -153,7 +153,7 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
     df['mineral'] = mineral
     return df
 
-def main(standards_dir, meteorite_dir, target_minerals_file, output_file,
+def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
          title=None, bits=32, mask=None, n=100, unknown_n=None, noise=10,
          model=None):
     characteristics = get_standards_characteristics(standards_dir, bits)
@@ -194,11 +194,6 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_file,
         from sklearn.naive_bayes import GaussianNB
         model = GaussianNB()
 
-    '''#model = RandomForestClassifier(100, max_depth=10, n_jobs=-1)
-    from sklearn.naive_bayes import GaussianNB
-    #model = GaussianNB()
-    from sklearn.svm import SVC
-    model = SVC(max_iter=3000)'''
     model.fit(X_train, Y_train)
 
     print("Training Accuracy:", (model.predict(X_train) == Y_train).mean())
@@ -242,10 +237,19 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_file,
 
     if title:
         figure.suptitle(title, fontsize=30, y=.91)
+
+    output_dir = Path(output_dir)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
     plt.savefig(
-        output_file,
+        output_dir / 'figure.png',
         facecolor='white', transparent=True, frameon=False, bbox_inches='tight'
     )
+
+    results.groupby('mineral').count()['mineral_index'].sort_values(
+        ascending=False
+    ).to_csv(output_dir / 'mineral_counts.csv')
 
 def parse_args():
     """ Build argument parser and get parsed args """
@@ -278,6 +282,7 @@ def parse_args():
             RandomForestClassifier, BaggingClassifier, AdaBoostClassifier
         )
         from sklearn.tree import DecisionTreeClassifier
+        from sklearn.neural_network import MLPClassifier
 
         if (model is None) or (model == "GaussianNB"):
             return GaussianNB()
@@ -294,8 +299,8 @@ def parse_args():
                         help="path to directory containing the meteorite images")
     parser.add_argument("target_minerals_file", type=valid_file,
                         help="A YAML file containing the minerals to search for")
-    parser.add_argument("output_file", type=str,
-                        help="The file to write the output image to.")
+    parser.add_argument("output_dir", type=str,
+                        help="The directory to write the outputs to.")
     parser.add_argument("--mask", type=valid_file, default=None,
                         help="An optional mask to use for the meteorite.")
     parser.add_argument("--title", type=str, default=None,
