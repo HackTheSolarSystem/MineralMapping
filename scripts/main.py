@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 from pathlib import Path
 
 import matplotlib.patches as mpatches
@@ -155,7 +156,7 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
 
 def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
          title=None, bits=32, mask=None, n=100, unknown_n=None, noise=10,
-         model=None):
+         model=None, batch_size=100000):
     characteristics = get_standards_characteristics(standards_dir, bits)
     target_minerals = load_target_minerals(target_minerals_file)
     #print(characteristics)
@@ -201,8 +202,10 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
 
     meteorite_df, meteorite_shape = load_images(meteorite_dir, bits, mask)
     x = meteorite_df[elements].values
-    meteorite_df['mineral'] = model.predict(x)
-    #print(meteorite_df.head(20))
+
+    meteorite_df['mineral'] = np.concatenate(list(map(
+        model.predict, np.array_split(x, int(math.ceil(len(x) / batch_size)))
+    )))
 
     minerals = sorted(meteorite_df['mineral'].unique())
     if mask:
@@ -325,7 +328,10 @@ def parse_args():
                                 which can be evaluated to a sklearn model
                                 such as "KNeighborsClassifier(10)".
                                 (Default GaussianNB)""")
-
+    parser.add_argument("--batch_size", type=int, default=100000,
+                        help="""The batch size to use for prediction.
+                                If you're getting a `MemoryError`, try turning
+                                it down. (Default 100000)""")
     parser.add_argument("--bits", type=int, choices=[8, 32], default=32,
                         help="image bit-depth to use (8 or 32)")
     return parser.parse_args()
