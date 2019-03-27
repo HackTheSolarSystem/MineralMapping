@@ -204,10 +204,11 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     meteorite_df['mineral'] = model.predict(x)
     #print(meteorite_df.head(20))
 
+    minerals = sorted(meteorite_df['mineral'].unique())
     if mask:
-        minerals = sorted(meteorite_df[meteorite_df['mask'] > 0]['mineral'].unique())
+        masked_minerals = sorted(meteorite_df[meteorite_df['mask'] > 0]['mineral'].unique())
     else:
-        minerals = sorted(meteorite_df['mineral'].unique())
+        masked_minerals = minerals
 
     results = meteorite_df.merge(
         pd.Series(
@@ -229,6 +230,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         mpatches.Patch(
             color=colors[i], label=minerals[i]
         ) for i in range(len(minerals))
+        if minerals[i] in masked_minerals
     ]
     ax.legend(
         handles=patches, bbox_to_anchor=(1.3, .5, 0, 0),
