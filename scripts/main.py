@@ -157,10 +157,15 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
 def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
          title=None, bits=32, mask=None, n=100, unknown_n=None, noise=10,
          model=None, batch_size=100000):
+    meteorite_df, meteorite_shape = load_images(meteorite_dir, bits, mask)
+
     characteristics = get_standards_characteristics(standards_dir, bits)
     target_minerals = load_target_minerals(target_minerals_file)
-    #print(characteristics)
-    elements = list(characteristics.keys())
+
+    #elements = list(characteristics.keys())
+    # Only include elements that are in the meteorite images
+    elements = [e for e in characteristics.keys() if e in meteorite_df.columns]
+    print(f"Using elements: {elements}")
 
     mineral_dfs = []
     for mineral, formula in target_minerals.items():
@@ -200,7 +205,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     print("Training Accuracy:", (model.predict(X_train) == Y_train).mean())
     print("Testing Accuracy:", (model.predict(X_test) == Y_test).mean())
 
-    meteorite_df, meteorite_shape = load_images(meteorite_dir, bits, mask)
+
     x = meteorite_df[elements].values
 
     meteorite_df['mineral'] = np.concatenate(list(map(
