@@ -210,8 +210,10 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     minerals = sorted(meteorite_df['mineral'].unique())
     if mask:
         masked_minerals = sorted(meteorite_df[meteorite_df['mask'] > 0]['mineral'].unique())
+        outputs = ['', '_masked']
     else:
         masked_minerals = minerals
+        outputs = ['']
 
     results = meteorite_df.merge(
         pd.Series(
@@ -220,41 +222,48 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         on='mineral'
     ).sort_values('order')
 
-    figure, ax = plt.subplots(figsize=(20,20))
-    norm = plt.Normalize(0, len(minerals)-1)
-    cmap = plt.cm.get_cmap('jet')
-    rgb = cmap(norm(results['mineral_index'].values.reshape(meteorite_shape)))
-    if mask:
-        rgb[..., -1] = results['mask'].values.reshape(meteorite_shape)
-    im = ax.imshow(rgb)
+    for suffix in outputs:
+        figure, ax = plt.subplots(figsize=(20,20))
+        norm = plt.Normalize(0, len(minerals)-1)
+        cmap = plt.cm.get_cmap('jet')
+        rgb = cmap(norm(results['mineral_index'].values.reshape(meteorite_shape)))
+        if suffix:
+            rgb[..., -1] = results['mask'].values.reshape(meteorite_shape)
+        im = ax.imshow(rgb)
 
-    colors = [cmap(norm(i)) for i in range(len(minerals))]
-    patches = [
-        mpatches.Patch(
-            color=colors[i], label=minerals[i]
-        ) for i in range(len(minerals))
-        if minerals[i] in masked_minerals
-    ]
-    ax.legend(
-        handles=patches, bbox_to_anchor=(1.3, .5, 0, 0),
-        loc=5, borderaxespad=0., fontsize=30
-    )
+        colors = [cmap(norm(i)) for i in range(len(minerals))]
+        patches = [
+            mpatches.Patch(
+                color=colors[i], label=minerals[i]
+            ) for i in range(len(minerals))
+            if minerals[i] in masked_minerals
+        ]
+        ax.legend(
+            handles=patches, bbox_to_anchor=(1.3, .5, 0, 0),
+            loc=5, borderaxespad=0., fontsize=30
+        )
 
-    if title:
-        figure.suptitle(title, fontsize=30, y=.91)
+        if title:
+            figure.suptitle(title, fontsize=30, y=.91)
 
-    output_dir = Path(output_dir)
-    if not output_dir.exists():
-        output_dir.mkdir(parents=True)
+        output_dir = Path(output_dir)
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True)
 
-    plt.savefig(
-        output_dir / 'figure.png',
-        facecolor='white', transparent=True, frameon=False, bbox_inches='tight'
-    )
+        plt.savefig(
+            output_dir / ('figure%s.png' % suffix),
+            facecolor='white', transparent=True, frameon=False, bbox_inches='tight'
+        )
+
 
     results.groupby('mineral').count()['mineral_index'].sort_values(
         ascending=False
     ).to_csv(output_dir / 'mineral_counts.csv')
+
+    if mask:
+        results[results['mask'] > 0].groupby('mineral').count()[
+            'mineral_index'
+        ].sort_values(ascending=False).to_csv(output_dir / 'mineral_counts_masked.csv')
 
 def parse_args():
     """ Build argument parser and get parsed args """
