@@ -212,7 +212,6 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         masked_minerals = sorted(meteorite_df[meteorite_df['mask'] > 0]['mineral'].unique())
         outputs = ['', '_masked']
     else:
-        masked_minerals = minerals
         outputs = ['']
 
     results = meteorite_df.merge(
@@ -228,7 +227,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         cmap = plt.cm.get_cmap('jet')
         rgb = cmap(norm(results['mineral_index'].values.reshape(meteorite_shape)))
         if suffix:
-            rgb[..., -1] = results['mask'].values.reshape(meteorite_shape)
+            rgb[..., -1] = (results['mask'] > 0).values.reshape(meteorite_shape)
         im = ax.imshow(rgb)
 
         colors = [cmap(norm(i)) for i in range(len(minerals))]
@@ -236,7 +235,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
             mpatches.Patch(
                 color=colors[i], label=minerals[i]
             ) for i in range(len(minerals))
-            if minerals[i] in masked_minerals
+            if (not suffix) or (minerals[i] in masked_minerals)
         ]
         ax.legend(
             handles=patches, bbox_to_anchor=(1.3, .5, 0, 0),
