@@ -1,9 +1,0 @@
-# Use this file to manually add in element characteristics for elements
-# that are missing from the standards
-
-P:
-    element: P
-    coef: 200.0
-    intercept: 0.0
-    std: 10.0
-    noise: 1.0
