@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+import yaml
 
 from lib import get_standards_characteristics, load_target_minerals, get_formula, load_images
 
@@ -157,6 +158,7 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
 def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
          title=None, bits=32, mask=None, n=100, unknown_n=None, noise=10,
          model=None, batch_size=100000):
+    args = locals()
     meteorite_df, meteorite_shape = load_images(meteorite_dir, bits, mask)
 
     characteristics = get_standards_characteristics(standards_dir, bits)
@@ -226,6 +228,10 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         on='mineral'
     ).sort_values('order')
 
+    output_dir = Path(output_dir)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
     for suffix in outputs:
         figure, ax = plt.subplots(figsize=(20,20))
         norm = plt.Normalize(0, len(minerals)-1)
@@ -250,14 +256,12 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         if title:
             figure.suptitle(title, fontsize=30, y=.91)
 
-        output_dir = Path(output_dir)
-        if not output_dir.exists():
-            output_dir.mkdir(parents=True)
-
         plt.savefig(
             output_dir / ('figure%s.png' % suffix),
             facecolor='white', transparent=True, frameon=False, bbox_inches='tight'
         )
+
+        plt.close()
 
 
     results.groupby('mineral').count()['mineral_index'].sort_values(
@@ -269,45 +273,48 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
             'mineral_index'
         ].sort_values(ascending=False).to_csv(output_dir / 'mineral_counts_masked.csv')
 
+    with open(output_dir / 'parameters.yaml', 'w') as f:
+        yaml.dump(args, f)
+
+# Helper function to detect valid directories and files
+def valid_path(path_str):
+    p = Path(path_str)
+    if not p.exists():
+        raise argparse.ArgumentTypeError(f"Could not find path {path_str}")
+    return p
+
+def valid_dir(path_str):
+    p = valid_path(path_str)
+    if not p.is_dir():
+        raise argparse.ArgumentTypeError(f"Path {path_str} is not a directory")
+    return p
+
+def valid_file(path_str):
+    p = valid_path(path_str)
+    if p.is_dir():
+        raise argparse.ArgumentTypeError(f"Path {path_str} is not a file")
+    return p
+
+def valid_model(model):
+    from sklearn.gaussian_process import GaussianProcessClassifier
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.naive_bayes import GaussianNB
+    from sklearn.svm import SVC
+    from sklearn.ensemble import (
+        RandomForestClassifier, BaggingClassifier, AdaBoostClassifier
+    )
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.neural_network import MLPClassifier
+
+    if (model is None) or (model == "GaussianNB"):
+        return GaussianNB()
+    elif model == "RandomForest":
+        return RandomForestClassifier(50, max_depth=10)
+    else:
+        return eval(model)
+
 def parse_args():
     """ Build argument parser and get parsed args """
-
-    # Helper function to detect valid directories and files
-    def valid_path(path_str):
-        p = Path(path_str)
-        if not p.exists():
-            raise argparse.ArgumentTypeError(f"Could not find path {path_str}")
-        return p
-
-    def valid_dir(path_str):
-        p = valid_path(path_str)
-        if not p.is_dir():
-            raise argparse.ArgumentTypeError(f"Path {path_str} is not a directory")
-        return p
-
-    def valid_file(path_str):
-        p = valid_path(path_str)
-        if p.is_dir():
-            raise argparse.ArgumentTypeError(f"Path {path_str} is not a file")
-        return p
-
-    def valid_model(model):
-        from sklearn.gaussian_process import GaussianProcessClassifier
-        from sklearn.neighbors import KNeighborsClassifier
-        from sklearn.naive_bayes import GaussianNB
-        from sklearn.svm import SVC
-        from sklearn.ensemble import (
-            RandomForestClassifier, BaggingClassifier, AdaBoostClassifier
-        )
-        from sklearn.tree import DecisionTreeClassifier
-        from sklearn.neural_network import MLPClassifier
-
-        if (model is None) or (model == "GaussianNB"):
-            return GaussianNB()
-        elif model == "RandomForest":
-            return RandomForestClassifier(50, max_depth=10)
-        else:
-            return eval(model)
 
     parser = argparse.ArgumentParser(description="Predict the mineral content of a "
                                                  "meteorite given spectrometer imagery.")
