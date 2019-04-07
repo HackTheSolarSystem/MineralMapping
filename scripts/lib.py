@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import json
+import logging
 
 import numpy as np
 import pandas as pd
@@ -70,16 +71,16 @@ def construct_standards_df(standard_arrs, mask_arrs):
 def load_standards_df(standards_dir, bits):
     """ Load a dataframe containing all unmasked points in standards """
     # Load standards and masks from tif into numpy arrays
-    print("Loading standards...")
+    #print("Loading standards...")
     standard_arrs, mask_arrs = load_standards(standards_dir, bits)
-    print(f"Successfully loaded {len(standard_arrs)} standards with {len(mask_arrs)} masks")
+    #print(f"Successfully loaded {len(standard_arrs)} standards with {len(mask_arrs)} masks")
 
     # Construct the pandas DataFrame containing unmasked intensities of elements along with
     # their corresponding mineral
     df = construct_standards_df(standard_arrs, mask_arrs)
-    print()
-    print(f"Loaded {len(df)} rows")
-    print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
+    #print()
+    #print(f"Loaded {len(df)} rows")
+    #print(f"Mineral counts:\n{json.dumps(df['mineral'].value_counts().to_dict(), indent=4)}")
     return df
 
 
@@ -125,6 +126,13 @@ def get_standards_weights(standards_dir, minerals):
             formula_str = None
             weights = custom[mineral]
 
+            for e, v in weights.items():
+                if v > 1:
+                    raise ValueError(
+                        f"{mineral}[{e}] must be a decimal less than 1, not a percent."
+                        f" Got {v}. Did you mean {v/100}? "
+                    )
+
         if weights is None:
             print(f"Invalid formula for mineral {mineral}: {formula_str}. Skipping")
             continue
@@ -169,6 +177,11 @@ def calculate_element_characteristics(df, elements):
             'noise': df[df['%s_weight' % col] == 0][col].std()
         }
         results[col] = d
+
+        if d['std'] > 20:
+            logging.warning(f"{col} std > 10 ({d['std']})")
+        if d['noise'] > 5:
+            logging.warning(f"{col} noise > 5 ({d['noise']})")
     return results
 
 

@@ -86,3 +86,4 @@ frontend/Thumbs.db
 **.ipynb_checkpoints
 outputs
 data
+*.ipynb
