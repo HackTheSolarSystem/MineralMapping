@@ -212,6 +212,29 @@ def get_standards_characteristics(standards_dir, bits=32, manual_elements=True):
     # the mapping.
     weights_df = get_standards_weights(standards_dir, df['mineral'].unique())
     df = df.merge(weights_df, on='mineral')
+
+    def mineral_diagnostics(group):
+        mineral = group['mineral'].iloc[0]
+
+        for element in elements:
+            weight = f"{element}_weight"
+            if weight not in group.columns:
+                continue
+
+            #print(element, group[weight].mean(), group[element].mean(), group[element].std())
+
+            if (group[weight].mean() < .01) and (group[element].mean() > 10):
+                logging.warning(
+                    f"{mineral} {element} channel values unexpectedly high"
+                    f" (mean = {group[element].mean()})"
+                )
+            if group[element].std() > 20:
+                logging.warning(
+                    f"{mineral} {element} channel STD > 20 ({group[element].std()})"
+                )
+
+    df.groupby('mineral').apply(mineral_diagnostics)
+
     elements = calculate_element_characteristics(df, elements)
 
     # Include manual element characteristics
