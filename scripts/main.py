@@ -266,7 +266,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
 
     results.merge(
         pd.Series(list(target_minerals.keys()), name='mineral').to_frame(),
-        on='mineral', how='right'
+        on='mineral', how='outer'
     ).groupby('mineral').count()['mineral_index'].sort_values(
         ascending=False
     ).to_csv(output_dir / 'mineral_counts.csv')
@@ -274,7 +274,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     if mask:
         results[results['mask'] > 0].merge(
             pd.Series(list(target_minerals.keys()), name='mineral').to_frame(),
-            on='mineral', how='right'
+            on='mineral', how='outer'
         ).groupby('mineral').count()[
             'mineral_index'
         ].sort_values(ascending=False).to_csv(output_dir / 'mineral_counts_masked.csv')
