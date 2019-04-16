@@ -9,7 +9,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run mineral prediction in"
                                                  "batch mode with a CSV.")
     parser.add_argument('csv', type=valid_file)
+    parser.add_argument('--batch_summary_csv', type=str, default=None,
+                        help="An optional output CSV with mineral counts for "
+                        "all of the runs.")
     args = parser.parse_args()
+    batch_summary_csv = args.batch_summary_csv
 
     df = pd.read_csv(args.csv, skipinitialspace=True)
 
@@ -24,6 +28,7 @@ if __name__ == "__main__":
             raise ValueError('%s must be a single value (must not contain `,`)' % col)
 
     df2 = df[['meteorite_dir', 'target_minerals_file', 'output_dir']]
+    results = []
     for col in df.columns:
         if col in df2:
             continue
@@ -49,5 +54,12 @@ if __name__ == "__main__":
             )
         }
 
-        main(*args, **kwargs)
+        results.append(main(*args, **kwargs))
         count += 1
+
+    if batch_summary_csv:
+        df = pd.concat(results, sort=True)
+        cols = ['path', 'mask']
+        df = df[cols + [c for c in df.columns if c not in cols]]
+
+        df.to_csv(batch_summary_csv, index=False)

@@ -263,24 +263,52 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
 
         plt.close()
 
+    def summarize(df, filename, mask):
+        path = output_dir / filename
+        mineral_counts = df.merge(
+            pd.Series(list(target_minerals.keys()), name='mineral').to_frame(),
+            on='mineral', how='outer'
+        ).groupby('mineral').count()['mineral_index'].sort_values(
+            ascending=False
+        )
+        mineral_counts.to_csv(path)
+        #print(mineral_counts)
 
-    results.merge(
+        summary = mineral_counts.to_frame().T
+
+        #summary.columns = summary.iloc[0]
+        #summary = summary.iloc[1:]
+        summary['path'] = str(path)
+        summary['mask'] = mask
+        #print(summary)
+        return summary
+
+    '''mineral_counts = results.merge(
         pd.Series(list(target_minerals.keys()), name='mineral').to_frame(),
         on='mineral', how='outer'
     ).groupby('mineral').count()['mineral_index'].sort_values(
         ascending=False
-    ).to_csv(output_dir / 'mineral_counts.csv')
+    )
+    mineral_counts.to_csv(output_dir / 'mineral_counts.csv')'''
+
+    summary = [summarize(results, 'mineral_counts.csv', False)]
+
 
     if mask:
-        results[results['mask'] > 0].merge(
+        summary.append(summarize(
+            results[results['mask'] > 0], 'mineral_counts_masked.csv', True
+        ))
+        '''results[results['mask'] > 0].merge(
             pd.Series(list(target_minerals.keys()), name='mineral').to_frame(),
             on='mineral', how='outer'
         ).groupby('mineral').count()[
             'mineral_index'
-        ].sort_values(ascending=False).to_csv(output_dir / 'mineral_counts_masked.csv')
+        ].sort_values(ascending=False).to_csv(output_dir / 'mineral_counts_masked.csv')'''
 
     with open(output_dir / 'parameters.yaml', 'w') as f:
         yaml.dump(args, f)
+
+    return pd.concat(summary, sort=True)
 
 # Helper function to detect valid directories and files
 def valid_path(path_str):
