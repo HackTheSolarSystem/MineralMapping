@@ -1,5 +1,6 @@
 import argparse
 import os
+import traceback
 
 import pandas as pd
 
@@ -53,8 +54,14 @@ if __name__ == "__main__":
                 (k not in required) and (not pd.isnull(row[k])) and row[k] != 'nan'
             )
         }
+        try:
+            results.append(main(*args, **kwargs))
+        except:
+            print('The following exception occured with the parameters:')
+            print(args)
+            print(kwargs)
+            traceback.print_exc()
 
-        results.append(main(*args, **kwargs))
         count += 1
 
     if batch_summary_csv:
