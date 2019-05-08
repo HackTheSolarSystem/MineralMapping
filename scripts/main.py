@@ -249,8 +249,8 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
             if (not suffix) or (minerals[i] in masked_minerals)
         ]
         ax.legend(
-            handles=patches, bbox_to_anchor=(1.3, .5, 0, 0),
-            loc=5, borderaxespad=0., fontsize=30
+            handles=patches, bbox_to_anchor=(1.05, .5),
+            borderaxespad=0., fontsize=30, loc="center left"
         )
 
         if title:
