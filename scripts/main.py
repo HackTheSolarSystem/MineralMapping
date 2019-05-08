@@ -157,7 +157,7 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
 
 def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
          title=None, bits=32, mask=None, n=100, unknown_n=None, noise=10,
-         model=None, batch_size=100000):
+         model=None, batch_size=100000, output_prefix=''):
     args = locals()
     meteorite_df, meteorite_shape = load_images(meteorite_dir, bits, mask)
 
@@ -257,14 +257,14 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
             figure.suptitle(title, fontsize=30, y=.91)
 
         plt.savefig(
-            output_dir / ('figure%s.png' % suffix),
+            output_dir / (f"{output_prefix}figure{suffix}.png"),
             facecolor='white', transparent=True, frameon=False, bbox_inches='tight'
         )
 
         plt.close()
 
     def summarize(df, filename, mask):
-        path = output_dir / filename
+        path = output_dir / (output_prefix + filename)
         mineral_counts = df.merge(
             pd.Series(list(target_minerals.keys()), name='mineral').to_frame(),
             on='mineral', how='outer'
@@ -305,7 +305,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
             'mineral_index'
         ].sort_values(ascending=False).to_csv(output_dir / 'mineral_counts_masked.csv')'''
 
-    with open(output_dir / 'parameters.yaml', 'w') as f:
+    with open(output_dir / f"{output_prefix}parameters.yaml", 'w') as f:
         yaml.dump(args, f)
 
     return pd.concat(summary, sort=True)
@@ -388,6 +388,9 @@ def parse_args():
                                 it down. (Default 100000)""")
     parser.add_argument("--bits", type=int, choices=[8, 32], default=32,
                         help="image bit-depth to use (8 or 32)")
+    parser.add_argument("--output_prefix", type=str, default="",
+                        help="""Prefix each output file with the given string.
+                                (Default '')""")
     return parser.parse_args()
 
 
