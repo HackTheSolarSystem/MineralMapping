@@ -158,6 +158,15 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
 def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
          title=None, bits=32, mask=None, n=100, unknown_n=None, noise=10,
          model=None, batch_size=100000, output_prefix=''):
+    # Make sure all numbers are ints
+    bits = int(bits)
+    n = int(n)
+    if unknown_n is None:
+        unknown_n = n
+    unknown_n = int(unknown_n)
+    noise = int(noise)
+    batch_size = int(batch_size)
+
     args = locals()
     meteorite_df, meteorite_shape = load_images(meteorite_dir, bits, mask)
 
@@ -179,8 +188,7 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
 
     df = pd.concat(mineral_dfs)
 
-    if unknown_n is None:
-        unknown_n = n
+
     if unknown_n > 0:
         unknown = pd.DataFrame(np.clip(
             np.hstack([

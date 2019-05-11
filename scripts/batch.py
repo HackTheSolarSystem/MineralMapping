@@ -4,7 +4,7 @@ import traceback
 
 import pandas as pd
 
-from main import main, valid_file, valid_dir
+from main import main, valid_file, valid_dir, valid_model
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run mineral prediction in"
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         ).stack().rename(col).str.strip().reset_index(level=1, drop=True)
 
         if col in convert_to_int:
-            series = series.astype(int)
+            series = series.astype(float)
         df2 = df2.join(series)
 
     count = 0
@@ -49,9 +49,10 @@ if __name__ == "__main__":
             valid_file(row['target_minerals_file']), os.path.join(row['output_dir'], str(count))
         ]
         kwargs = {
-            k: row[k]
+            k: valid_model(row[k]) if k == 'model' else row[k]
             for k in row.index if (
-                (k not in required) and (not pd.isnull(row[k])) and row[k] != 'nan'
+                (k not in required) and (not pd.isnull(row[k])) and
+                row[k] != 'nan' and not pd.isnull(row[k])
             )
         }
         try:
