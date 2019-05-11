@@ -10,4 +10,4 @@ output_prefix: ''
 standards_dir: !!python/object/apply:pathlib.PosixPath [example, standards]
 target_minerals_file: !!python/object/apply:pathlib.PosixPath [example, targets.yaml]
 title: null
-unknown_n: null
+unknown_n: 100

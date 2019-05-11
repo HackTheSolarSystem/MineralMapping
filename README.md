@@ -8,7 +8,7 @@ minerals and trains a machine learning classifier on that simulated data.
 It then takes the trained classifier and applies it to an image of a real,
 unknown object to predict the mineral at each pixel in the image.
 
-![Example output](example/output/figure.png)
+![Example output](cover.png)
 
 ## Installation
 
@@ -203,8 +203,8 @@ optional arguments:
 
 `scripts/batch.py` supports running the classification is batch mode by providing
 a CSV file describing the parameters. The CSV file can have column headings for
-any of the parameters available to `scripts/main.py`. `example/batch.csv` gives
-an example of the batch CSV.
+any of the parameters available to `scripts/main.py`.
+[`example/batch.csv`](example/batch.csv) gives an example of the batch CSV.
 
 Running with `scripts/batch.py example/batch.csv` produces a directory called
 `example/batch_output` with a series of subdirectories containing each
