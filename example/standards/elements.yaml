@@ -1,0 +1,9 @@
+# Use this file to manually add in element characteristics for elements
+# that are missing from the standards.
+
+Na: # Element symbol
+    element: Na # Element symbol
+    coef: 200.0 # The coefficient of the scan intensity values to the proportion of that element in the mineral.
+    intercept: 0.0 # Should be 0
+    std: 10.0 # The standard deviation of the values
+    noise: 1.0 # The amount of background noise in the channel

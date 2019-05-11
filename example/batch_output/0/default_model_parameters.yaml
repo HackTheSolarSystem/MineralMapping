@@ -1,0 +1,13 @@
+batch_size: 100000
+bits: 32
+mask: null
+meteorite_dir: !!python/object/apply:pathlib.PosixPath [example, meteorite]
+model: null
+n: 1000
+noise: 10
+output_dir: example/batch_output/0
+output_prefix: default_model_
+standards_dir: !!python/object/apply:pathlib.PosixPath [example, standards]
+target_minerals_file: !!python/object/apply:pathlib.PosixPath [example, targets.yaml]
+title: null
+unknown_n: 1000

@@ -1,0 +1,3 @@
+standards_dir,meteorite_dir,target_minerals_file,output_dir, mask, n, unknown_n,model,output_prefix
+example/standards,example/meteorite,example/targets.yaml,example/batch_output,,1000,,,default_model_
+example/standards,example/meteorite,example/targets.yaml,example/batch_output,example/meteorite/mask.tif,"1000, 5000",5000,RandomForest,random_forest_

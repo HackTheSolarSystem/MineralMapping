@@ -1,0 +1,38 @@
+# Each entry is the mineral name followed by the mineral definition.
+# Minerals can be defined in one of two ways
+
+# Minerals defined by formulas
+# Simply enter the chemical formula of the mineral
+Millerite: NiS
+Troilite: FeS
+Pentlandite: Fe4.5Ni4.5S8
+Magnetite: Fe3O4
+Anorthite: CaAl2Si2O8
+Diopside: CaMgSi2O6
+Albite: NaAlSi3O8
+
+# Minerals defined by a list of components. Can be used when minerals have
+# a component that can have a variable amount of different elements.
+
+# For example, Olivine can be all Fe or all Mg or anywhere in between
+Olivine:
+    - {components: {Fe: [0, 1], Mg: [0, 1]}, quantity: 2}
+    - SiO4
+Clinopyroxenes:
+    - {components: {Ca: [0, 1], Na: [0, 1]}}
+    - {components: {Mg: [0, 1], Fe: [0, 1], Al: [0, 1]}}
+    - Si2
+    - O6
+Orthopyroxenes:
+    - {components: {Fe: [0, 1], Mg: [0, 1]}}
+    - SiO3
+
+# Taenite can be from 50% Fe to 90% Fe, with Ni filling the rest.
+Taenite: {components: {Fe: [.5, .9], Ni: [.1, .5]}}
+Kamacite: {components: {Fe: [.9, .9], Ni: [.1, .1]}}
+Schreibersite:
+    - {components: {Fe: [.5, .5], Ni: [.5, .5]}, quantity: 3}
+    - P
+MSS:
+    - {components: {Fe: [0, 1], Ni: [0, 1]}, quantity: 1}
+    - S
