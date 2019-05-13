@@ -142,7 +142,7 @@ define your own model using the following scikit-learn models:
 
 There are two more parameters for tweaking the classification:
 * `--n` which changes the number of samples used for training. The higher the
-more robust the classification will be, but at the cost of memory an time.
+more robust the classification will be, but at the cost of memory and time.
 * `--unknown_n` changes the number of "Unknown" samples used for training.
 This allows for the model to classify some pixels as "unknown" or not matching
 any of the target minerals. By default, `unknown_n` is the same as `n`.
