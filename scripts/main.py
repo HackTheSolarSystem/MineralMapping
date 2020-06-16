@@ -75,7 +75,6 @@ def simulate_mass(formula, n):
     row.
     """
     if isinstance(formula, dict) and "formula" in formula:
-        print(formula)
         formula = formula["formula"]
     if not isinstance(formula, list):
         formula = [formula]
@@ -130,7 +129,7 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
         A dict describing the characteristics of each element in the electron
         microprobe scan. Obtained from lib.get_standards_characteristics
     n: int
-        The number of examples to create. (Default 5)
+        The number of examples to create. (Default 100)
     noise: number
         The amount of noise to add to each element channel. More noise will
         allow the classifier to have more tolerance when classifying minerals
@@ -185,11 +184,8 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     mineral_colors = {'Unknown': to_rgba('black')}
     mineral_dfs = []
     for mineral, formula in target_minerals.items():
-        #print(mineral)
-
         df = simulate_mineral(mineral, formula, characteristics, n)
-        #print(df.head())
-        mineral_dfs.append(df[elements + ['mineral']])
+        mineral_dfs.append(df)
 
         if isinstance(formula, dict) and 'color' in formula:
             mineral_colors[mineral] = to_rgba(formula['color'])
@@ -197,6 +193,8 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
             mineral_colors[mineral] = None
 
     df = pd.concat(mineral_dfs)
+    mineral_mins = df.groupby("mineral").min()[[e for e in elements if e in df.columns]].reset_index()
+    df = df[elements + ['mineral']]
 
     # Assign colors to the minerals that didn't have any specified
     norm = plt.Normalize(0, len(mineral_colors)-1)
@@ -238,7 +236,16 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         model.predict, np.array_split(x, int(math.ceil(len(x) / batch_size)))
     )))
 
-    print(meteorite_df)
+    # Sanity check - remove any classifications where the pixel is missing required elements.
+    for i, row in mineral_mins.iterrows():
+        filter = meteorite_df['mineral'] == row['mineral']
+        #print(elements, row)
+        for element in elements:
+            if row[element] > 0:
+                filter = filter & (meteorite_df[element] == 0)
+
+        meteorite_df.loc[filter, 'mineral'] = "Unknown"
+
 
     minerals = sorted(meteorite_df['mineral'].unique())
     if mask:
