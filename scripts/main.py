@@ -3,7 +3,7 @@ import json
 import math
 from pathlib import Path
 
-from matplotlib.colors import to_rgba, ListedColormap
+from matplotlib.colors import to_hex, to_rgba, ListedColormap
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -265,12 +265,19 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
+    norm = plt.Normalize(0, len(minerals)-1)
+    cmap = ListedColormap([mineral_colors[m] for m in minerals])
+
+    color_legend = {m: to_hex(cmap(norm(i))) for i, m in enumerate(minerals)}
+    print(color_legend)
+    with open(output_dir / f"color_legend.yaml", 'w') as f:
+        yaml.dump(color_legend, f, default_flow_style=False)
+
+
     for suffix in outputs:
         figure, ax = plt.subplots(figsize=(20,20))
-        norm = plt.Normalize(0, len(minerals)-1)
-        #cmap = plt.cm.get_cmap('jet')
-        cmap = ListedColormap([mineral_colors[m] for m in minerals])
-        rgb = cmap(norm(results['mineral_index'].values.reshape(meteorite_shape)))
+
+        rgb = np.round(cmap(norm(results['mineral_index'].values.reshape(meteorite_shape)))*255).astype(np.ubyte)
         if suffix:
             rgb[..., -1] = (results['mask'] > 0).values.reshape(meteorite_shape)
         im = ax.imshow(rgb)
