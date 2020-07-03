@@ -3,6 +3,7 @@ import json
 import math
 from pathlib import Path
 
+from matplotlib.colors import to_hex, to_rgba, ListedColormap
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,6 +74,8 @@ def simulate_mass(formula, n):
     element_percent which has that elements perentage of the whole mass of that
     row.
     """
+    if isinstance(formula, dict) and "formula" in formula:
+        formula = formula["formula"]
     if not isinstance(formula, list):
         formula = [formula]
 
@@ -126,7 +129,7 @@ def simulate_mineral(mineral, formula, elements, n=100, noise=10):
         A dict describing the characteristics of each element in the electron
         microprobe scan. Obtained from lib.get_standards_characteristics
     n: int
-        The number of examples to create. (Default 5)
+        The number of examples to create. (Default 100)
     noise: number
         The amount of noise to add to each element channel. More noise will
         allow the classifier to have more tolerance when classifying minerals
@@ -178,16 +181,27 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     elements = [e for e in characteristics.keys() if e in meteorite_df.columns]
     print(f"Using elements: {elements}")
 
+    mineral_colors = {'Unknown': to_rgba('black')}
     mineral_dfs = []
     for mineral, formula in target_minerals.items():
-        #print(mineral)
-
         df = simulate_mineral(mineral, formula, characteristics, n)
-        #print(df.head())
-        mineral_dfs.append(df[elements + ['mineral']])
+        mineral_dfs.append(df)
+
+        if isinstance(formula, dict) and 'color' in formula:
+            mineral_colors[mineral] = to_rgba(formula['color'])
+        else:
+            mineral_colors[mineral] = None
 
     df = pd.concat(mineral_dfs)
+    mineral_mins = df.groupby("mineral").min()[[e for e in elements if e in df.columns]].reset_index()
+    df = df[elements + ['mineral']]
 
+    # Assign colors to the minerals that didn't have any specified
+    norm = plt.Normalize(0, len(mineral_colors)-1)
+    cmap = plt.cm.get_cmap('jet')
+    for i, (k) in enumerate(sorted(mineral_colors.keys())):
+        if mineral_colors[k] is None:
+            mineral_colors[k] = cmap(norm(i))
 
     if unknown_n > 0:
         unknown = pd.DataFrame(np.clip(
@@ -222,6 +236,17 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
         model.predict, np.array_split(x, int(math.ceil(len(x) / batch_size)))
     )))
 
+    # Sanity check - remove any classifications where the pixel is missing required elements.
+    for i, row in mineral_mins.iterrows():
+        filter = meteorite_df['mineral'] == row['mineral']
+        #print(elements, row)
+        for element in elements:
+            if row[element] > 0:
+                filter = filter & (meteorite_df[element] == 0)
+
+        meteorite_df.loc[filter, 'mineral'] = "Unknown"
+
+
     minerals = sorted(meteorite_df['mineral'].unique())
     if mask:
         masked_minerals = sorted(meteorite_df[meteorite_df['mask'] > 0]['mineral'].unique())
@@ -240,14 +265,25 @@ def main(standards_dir, meteorite_dir, target_minerals_file, output_dir,
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
+    norm = plt.Normalize(0, len(minerals)-1)
+    cmap = ListedColormap([mineral_colors[m] for m in minerals])
+
+    color_legend = {m: to_hex(cmap(norm(i))) for i, m in enumerate(minerals)}
+    print(color_legend)
+    with open(output_dir / f"color_legend.yaml", 'w') as f:
+        yaml.dump(color_legend, f, default_flow_style=False)
+
+
     for suffix in outputs:
         figure, ax = plt.subplots(figsize=(20,20))
-        norm = plt.Normalize(0, len(minerals)-1)
-        cmap = plt.cm.get_cmap('jet')
-        rgb = cmap(norm(results['mineral_index'].values.reshape(meteorite_shape)))
+
+        rgb = np.round(cmap(norm(results['mineral_index'].values.reshape(meteorite_shape)))*255).astype(np.ubyte)
         if suffix:
             rgb[..., -1] = (results['mask'] > 0).values.reshape(meteorite_shape)
         im = ax.imshow(rgb)
+
+        # Save the raw image in the original dimensions
+        plt.imsave(output_dir / (f"{output_prefix}figure{suffix}.tiff"), rgb)
 
         colors = [cmap(norm(i)) for i in range(len(minerals))]
         patches = [
